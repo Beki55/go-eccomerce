@@ -2,8 +2,10 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
 import { CartProvider } from '@/lib/cart-context';
+import { AuthProvider } from '@/lib/auth-context';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'LUXE — Elevated Living',
@@ -15,13 +17,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          <CartProvider>
-            <div className="min-h-screen flex flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-          </CartProvider>
+          <AuthProvider>
+            <CartProvider>
+              <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+              <Toaster position="top-center" expand={false} richColors />
+            </CartProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
