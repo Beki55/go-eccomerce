@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 // ServiceConfig holds configuration for any microservice
@@ -42,6 +44,13 @@ func (d DatabaseConfig) DSN() string {
 
 // LoadServiceConfig loads config for a given service from environment variables
 func LoadServiceConfig(serviceName, defaultPort, defaultDBName string) *ServiceConfig {
+	// Load .env file if it exists
+	err := godotenv.Load(".env")
+	if err != nil {
+		// Fallback to searching in parent directories or just skip if not found
+		godotenv.Load("../.env")
+	}
+
 	return &ServiceConfig{
 		ServiceName: serviceName,
 		Port:        getEnv("PORT", defaultPort),
