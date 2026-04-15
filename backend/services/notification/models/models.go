@@ -11,7 +11,7 @@ import (
 // Notification represents system and email notifications
 type Notification struct {
 	ID      uuid.UUID      `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	UserID  uuid.UUID      `gorm:"type:uuid;not null;index" json:"user_id"`
+	UserID  uuid.UUID      `gorm:"type:uuid;not null;index" json:"user_id"` // References user-service (no FK)
 	Type    string         `gorm:"type:varchar(50);not null" json:"type"`
 	Title   string         `gorm:"type:varchar(255);not null" json:"title"`
 	Content string         `gorm:"type:text;not null" json:"content"`
@@ -19,9 +19,6 @@ type Notification struct {
 	IsRead  bool           `gorm:"default:false" json:"is_read"`
 	ReadAt  *time.Time     `gorm:"type:timestamp" json:"read_at,omitempty"`
 	SentAt  time.Time      `gorm:"autoCreateTime" json:"sent_at"`
-
-	// Relationships
-	User User `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (n *Notification) BeforeCreate(tx *gorm.DB) error {
@@ -34,7 +31,7 @@ func (n *Notification) BeforeCreate(tx *gorm.DB) error {
 // APILog represents API request/response logging
 type APILog struct {
 	ID             uuid.UUID  `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	UserID         *uuid.UUID `gorm:"type:uuid;index" json:"user_id,omitempty"`
+	UserID         *uuid.UUID `gorm:"type:uuid;index" json:"user_id,omitempty"` // References user-service (no FK)
 	Method         string     `gorm:"type:varchar(10);not null" json:"method"`
 	Endpoint       string     `gorm:"type:varchar(255);not null" json:"endpoint"`
 	StatusCode     *int       `gorm:"type:integer" json:"status_code,omitempty"`
@@ -43,9 +40,6 @@ type APILog struct {
 	UserAgent      *string    `gorm:"type:text" json:"user_agent,omitempty"`
 	RequestBody    *string    `gorm:"type:text" json:"request_body,omitempty"`
 	CreatedAt      time.Time  `gorm:"autoCreateTime" json:"created_at"`
-
-	// Relationships
-	User *User `gorm:"foreignKey:UserID" json:"user,omitempty"`
 }
 
 func (al *APILog) BeforeCreate(tx *gorm.DB) error {

@@ -11,7 +11,7 @@ import (
 // Cart represents shopping cart session storage
 type Cart struct {
 	ID             uuid.UUID       `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
-	UserID         *uuid.UUID      `gorm:"type:uuid;uniqueIndex" json:"user_id,omitempty"`
+	UserID         *uuid.UUID      `gorm:"type:uuid;uniqueIndex" json:"user_id,omitempty"` // References user-service (no FK)
 	SessionID      *string         `gorm:"type:varchar(100);uniqueIndex" json:"session_id,omitempty"`
 	CouponCode     *string         `gorm:"type:varchar(50)" json:"coupon_code,omitempty"`
 	DiscountAmount decimal.Decimal `gorm:"type:decimal(10,2);default:0" json:"discount_amount"`
@@ -19,8 +19,6 @@ type Cart struct {
 	CreatedAt      time.Time       `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt      time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
 
-	// Relationships
-	User  *User      `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	Items []CartItem `gorm:"foreignKey:CartID;constraint:OnDelete:CASCADE" json:"items,omitempty"`
 }
 
@@ -35,17 +33,14 @@ func (c *Cart) BeforeCreate(tx *gorm.DB) error {
 type CartItem struct {
 	ID         uuid.UUID       `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	CartID     uuid.UUID       `gorm:"type:uuid;not null;index" json:"cart_id"`
-	ProductID  uuid.UUID       `gorm:"type:uuid;not null;index" json:"product_id"`
-	VariantID  *uuid.UUID      `gorm:"type:uuid;index" json:"variant_id,omitempty"`
+	ProductID  uuid.UUID       `gorm:"type:uuid;not null;index" json:"product_id"`  // References product-service (no FK)
+	VariantID  *uuid.UUID      `gorm:"type:uuid;index" json:"variant_id,omitempty"` // References product-service (no FK)
 	Quantity   int             `gorm:"not null;default:1;check:quantity > 0" json:"quantity"`
 	UnitPrice  decimal.Decimal `gorm:"type:decimal(10,2);not null" json:"unit_price"`
 	TotalPrice decimal.Decimal `gorm:"type:decimal(10,2);not null" json:"total_price"`
 	AddedAt    time.Time       `gorm:"autoCreateTime" json:"added_at"`
 
-	// Relationships
-	Cart    Cart            `gorm:"foreignKey:CartID" json:"cart,omitempty"`
-	Product Product         `gorm:"foreignKey:ProductID" json:"product,omitempty"`
-	Variant *ProductVariant `gorm:"foreignKey:VariantID" json:"variant,omitempty"`
+	Cart Cart `gorm:"foreignKey:CartID" json:"cart,omitempty"`
 }
 
 func (ci *CartItem) BeforeCreate(tx *gorm.DB) error {

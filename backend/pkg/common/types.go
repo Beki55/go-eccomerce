@@ -1,6 +1,34 @@
-package models
+package common
 
-import "database/sql/driver"
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+// BaseModel provides common fields for all models across services
+type BaseModel struct {
+	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+}
+
+// BeforeCreate generates a UUID if not already set
+func (b *BaseModel) BeforeCreate(tx *gorm.DB) error {
+	if b.ID == uuid.Nil {
+		b.ID = uuid.New()
+	}
+	return nil
+}
+
+// SoftDeleteModel extends BaseModel with soft delete support
+type SoftDeleteModel struct {
+	BaseModel
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+}
+
+// --- Shared Enum Types (used across service boundaries) ---
 
 // UserRole represents the role of a user
 type UserRole string
@@ -11,12 +39,6 @@ const (
 	RoleVendor   UserRole = "vendor"
 )
 
-func (r UserRole) Value() (driver.Value, error) { return string(r), nil }
-func (r *UserRole) Scan(value interface{}) error {
-	*r = UserRole(value.(string))
-	return nil
-}
-
 // AddressType represents address category
 type AddressType string
 
@@ -24,12 +46,6 @@ const (
 	AddressShipping AddressType = "shipping"
 	AddressBilling  AddressType = "billing"
 )
-
-func (a AddressType) Value() (driver.Value, error) { return string(a), nil }
-func (a *AddressType) Scan(value interface{}) error {
-	*a = AddressType(value.(string))
-	return nil
-}
 
 // OrderStatus represents order lifecycle states
 type OrderStatus string
@@ -45,12 +61,6 @@ const (
 	OrderReturned   OrderStatus = "returned"
 )
 
-func (o OrderStatus) Value() (driver.Value, error) { return string(o), nil }
-func (o *OrderStatus) Scan(value interface{}) error {
-	*o = OrderStatus(value.(string))
-	return nil
-}
-
 // PaymentStatus represents payment states
 type PaymentStatus string
 
@@ -61,12 +71,6 @@ const (
 	PaymentRefunded PaymentStatus = "refunded"
 )
 
-func (p PaymentStatus) Value() (driver.Value, error) { return string(p), nil }
-func (p *PaymentStatus) Scan(value interface{}) error {
-	*p = PaymentStatus(value.(string))
-	return nil
-}
-
 // CouponType represents discount type
 type CouponType string
 
@@ -74,9 +78,3 @@ const (
 	CouponPercentage CouponType = "percentage"
 	CouponFixed      CouponType = "fixed"
 )
-
-func (c CouponType) Value() (driver.Value, error) { return string(c), nil }
-func (c *CouponType) Scan(value interface{}) error {
-	*c = CouponType(value.(string))
-	return nil
-}

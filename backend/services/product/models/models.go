@@ -24,7 +24,7 @@ type Category struct {
 	CreatedAt   time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
 
-	// Relationships
+	// Self-referencing relationships
 	Parent   *Category  `gorm:"foreignKey:ParentID" json:"parent,omitempty"`
 	Children []Category `gorm:"foreignKey:ParentID" json:"children,omitempty"`
 	Products []Product  `gorm:"foreignKey:CategoryID" json:"products,omitempty"`
@@ -48,7 +48,6 @@ type Brand struct {
 	IsActive    bool      `gorm:"default:true" json:"is_active"`
 	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
 
-	// Relationships
 	Products []Product `gorm:"foreignKey:BrandID" json:"products,omitempty"`
 }
 
@@ -64,7 +63,7 @@ type Product struct {
 	ID                uuid.UUID        `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
 	CategoryID        *uuid.UUID       `gorm:"type:uuid;index" json:"category_id,omitempty"`
 	BrandID           *uuid.UUID       `gorm:"type:uuid;index" json:"brand_id,omitempty"`
-	VendorID          *uuid.UUID       `gorm:"type:uuid;index" json:"vendor_id,omitempty"`
+	VendorID          *uuid.UUID       `gorm:"type:uuid;index" json:"vendor_id,omitempty"` // References user-service (no FK)
 	SKU               string           `gorm:"type:varchar(50);not null;uniqueIndex" json:"sku"`
 	Name              string           `gorm:"type:varchar(200);not null;index" json:"name"`
 	Slug              string           `gorm:"type:varchar(200);not null;uniqueIndex" json:"slug"`
@@ -93,13 +92,13 @@ type Product struct {
 	UpdatedAt         time.Time        `gorm:"autoUpdateTime" json:"updated_at"`
 	DeletedAt         gorm.DeletedAt   `gorm:"index" json:"deleted_at,omitempty"`
 
-	// Relationships
+	// Internal relationships
 	Category      *Category        `gorm:"foreignKey:CategoryID" json:"category,omitempty"`
 	Brand         *Brand           `gorm:"foreignKey:BrandID" json:"brand,omitempty"`
-	Vendor        *User            `gorm:"foreignKey:VendorID" json:"vendor,omitempty"`
 	Variants      []ProductVariant `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" json:"variants,omitempty"`
 	InventoryLogs []InventoryLog   `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" json:"inventory_logs,omitempty"`
-	Reviews       []Review         `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" json:"reviews,omitempty"`
+	Wishlists     []Wishlist       `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" json:"wishlists,omitempty"`
+	Likes         []ProductLike    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE" json:"likes,omitempty"`
 }
 
 func (p *Product) BeforeCreate(tx *gorm.DB) error {
@@ -120,7 +119,6 @@ type ProductVariant struct {
 	Images          datatypes.JSON  `gorm:"type:jsonb" json:"images,omitempty"`
 	CreatedAt       time.Time       `gorm:"autoCreateTime" json:"created_at"`
 
-	// Relationships
 	Product Product `gorm:"foreignKey:ProductID" json:"product,omitempty"`
 }
 
@@ -141,18 +139,52 @@ type InventoryLog struct {
 	NewQuantity      int        `gorm:"not null" json:"new_quantity"`
 	Reason           *string    `gorm:"type:varchar(100)" json:"reason,omitempty"`
 	ReferenceID      *string    `gorm:"type:varchar(100)" json:"reference_id,omitempty"`
-	CreatedBy        *uuid.UUID `gorm:"type:uuid;index" json:"created_by,omitempty"`
+	CreatedBy        *uuid.UUID `gorm:"type:uuid;index" json:"created_by,omitempty"` // References user-service (no FK)
 	CreatedAt        time.Time  `gorm:"autoCreateTime" json:"created_at"`
 
-	// Relationships
 	Product Product         `gorm:"foreignKey:ProductID" json:"product,omitempty"`
 	Variant *ProductVariant `gorm:"foreignKey:VariantID" json:"variant,omitempty"`
-	Creator *User           `gorm:"foreignKey:CreatedBy" json:"creator,omitempty"`
 }
 
 func (il *InventoryLog) BeforeCreate(tx *gorm.DB) error {
 	if il.ID == uuid.Nil {
 		il.ID = uuid.New()
+	}
+	return nil
+}
+
+// Wishlist represents user's saved/favorite products
+type Wishlist struct {
+	ID                  uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	UserID              uuid.UUID `gorm:"type:uuid;not null;index;uniqueIndex:idx_wishlist_user_product" json:"user_id"` // References user-service (no FK)
+	ProductID           uuid.UUID `gorm:"type:uuid;not null;index;uniqueIndex:idx_wishlist_user_product" json:"product_id"`
+	AddedAt             time.Time `gorm:"autoCreateTime" json:"added_at"`
+	NotifyOnPriceDrop   bool      `gorm:"default:false" json:"notify_on_price_drop"`
+	NotifyOnBackInStock bool      `gorm:"default:false" json:"notify_on_back_in_stock"`
+
+	Product Product `gorm:"foreignKey:ProductID" json:"product,omitempty"`
+}
+
+func (w *Wishlist) BeforeCreate(tx *gorm.DB) error {
+	if w.ID == uuid.Nil {
+		w.ID = uuid.New()
+	}
+	return nil
+}
+
+// ProductLike represents product likes/favorites
+type ProductLike struct {
+	ID        uuid.UUID `gorm:"type:uuid;default:uuid_generate_v4();primaryKey" json:"id"`
+	ProductID uuid.UUID `gorm:"type:uuid;not null;index;uniqueIndex:idx_like_user_product" json:"product_id"`
+	UserID    uuid.UUID `gorm:"type:uuid;not null;index;uniqueIndex:idx_like_user_product" json:"user_id"` // References user-service (no FK)
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at"`
+
+	Product Product `gorm:"foreignKey:ProductID" json:"product,omitempty"`
+}
+
+func (pl *ProductLike) BeforeCreate(tx *gorm.DB) error {
+	if pl.ID == uuid.Nil {
+		pl.ID = uuid.New()
 	}
 	return nil
 }
