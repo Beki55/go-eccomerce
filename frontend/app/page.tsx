@@ -45,7 +45,7 @@ export default function HomePage() {
       <section className="relative min-h-screen flex items-center justify-center text-center px-4 pt-20">
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.pexels.com/photos/1536619/pexels-photo-1536619.jpeg?auto=compress&cs=tinysrgb&w=1600"
+            src="https://image.slidesdocs.com/responsive-images/background/shopping-online-made-easy-with-mobile-app-3d-rendering-powerpoint-background_3663844562__960_540.jpg"
             alt="Hero"
             fill
             className="object-cover"
