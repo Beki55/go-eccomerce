@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCart } from '@/lib/cart-context';
-import { ShoppingBag, Sun, Moon, Search, User, Menu, X, ChevronDown } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
+import { ShoppingBag, Sun, Moon, Search, User, Menu, X, LogOut } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -18,6 +19,7 @@ export default function Header() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { totalItems } = useCart();
+  const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -35,11 +37,10 @@ export default function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled
-            ? 'backdrop-blur-xl border-b'
-            : 'bg-transparent'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
+          ? 'backdrop-blur-xl border-b'
+          : 'bg-transparent'
+          }`}
         style={{
           backgroundColor: scrolled
             ? isDark ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.92)'
@@ -72,17 +73,15 @@ export default function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`relative font-sans text-sm tracking-widest uppercase transition-colors duration-300 group ${
-                    pathname === link.href
-                      ? 'text-[#D4AF37]'
-                      : 'text-foreground hover:text-[#D4AF37]'
-                  }`}
+                  className={`relative font-sans text-sm tracking-widest uppercase transition-colors duration-300 group ${pathname === link.href
+                    ? 'text-[#D4AF37]'
+                    : 'text-foreground hover:text-[#D4AF37]'
+                    }`}
                 >
                   {link.label}
                   <span
-                    className={`absolute -bottom-1 left-0 h-px transition-all duration-300 ${
-                      pathname === link.href ? 'w-full' : 'w-0 group-hover:w-full'
-                    }`}
+                    className={`absolute -bottom-1 left-0 h-px transition-all duration-300 ${pathname === link.href ? 'w-full' : 'w-0 group-hover:w-full'
+                      }`}
                     style={{ background: 'linear-gradient(90deg, #FFD700, #D4AF37)' }}
                   />
                 </Link>
@@ -112,9 +111,19 @@ export default function Header() {
                 </button>
               )}
 
-              <Link href="/account" className="p-2 rounded-full transition-all duration-300 hover:bg-[rgba(212,175,55,0.1)] hidden sm:block">
+              <Link href={user ? "/account" : "/auth"} className="p-2 rounded-full transition-all duration-300 hover:bg-[rgba(212,175,55,0.1)] hidden sm:block">
                 <User size={18} className="text-[#D4AF37]" />
               </Link>
+
+              {user && (
+                <button
+                  onClick={logout}
+                  className="p-2 rounded-full transition-all duration-300 hover:bg-[rgba(212,175,55,0.1)] hidden sm:block"
+                  aria-label="Logout"
+                >
+                  <LogOut size={18} className="text-red-500" />
+                </button>
+              )}
 
               <Link href="/cart" className="relative p-2 rounded-full transition-all duration-300 hover:bg-[rgba(212,175,55,0.1)]">
                 <ShoppingBag size={18} className="text-[#D4AF37]" />
@@ -195,9 +204,8 @@ export default function Header() {
                   <Link
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`font-serif text-3xl font-light tracking-wider transition-colors ${
-                      pathname === link.href ? 'gold-text' : 'text-foreground hover:text-[#D4AF37]'
-                    }`}
+                    className={`font-serif text-3xl font-light tracking-wider transition-colors ${pathname === link.href ? 'gold-text' : 'text-foreground hover:text-[#D4AF37]'
+                      }`}
                   >
                     {link.label}
                   </Link>
