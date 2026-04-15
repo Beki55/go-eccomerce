@@ -1,0 +1,38 @@
+# Binaries
+backend/bin/
+bin/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go
+go.sum
+vendor/
+*.test
+*.out
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+! .env.example
+
+# Sensitive files
+firebase-credentials.json
+*creds.json
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

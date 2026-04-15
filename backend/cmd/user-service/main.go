@@ -2,10 +2,16 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/beki55/go-ecommerce/pkg/config"
 	"github.com/beki55/go-ecommerce/pkg/database"
+	"github.com/beki55/go-ecommerce/pkg/utils"
+	"github.com/beki55/go-ecommerce/services/user/handler"
 	"github.com/beki55/go-ecommerce/services/user/models"
+	"github.com/beki55/go-ecommerce/services/user/repository"
+	"github.com/beki55/go-ecommerce/services/user/service"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -20,7 +26,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("❌ [%s] Redis connection failed: %v", cfg.ServiceName, err)
 	}
-	_ = rdb // Will be used for session caching, rate limiting, etc.
+	_ = rdb
 
 	if err := database.AutoMigrate(db,
 		&models.User{},
@@ -31,5 +37,34 @@ func main() {
 		log.Fatalf("❌ [%s] Migration failed: %v", cfg.ServiceName, err)
 	}
 
+	// Firebase Init
+	firebaseCreds := os.Getenv("FIREBASE_CREDENTIALS_PATH")
+	if firebaseCreds == "" {
+		firebaseCreds = "./firebase-credentials.json"
+	}
+
+	fbApp, err := utils.InitFirebase(firebaseCreds)
+	if err != nil {
+		log.Printf("⚠️  Firebase initialization failed (Google Auth will be disabled): %v", err)
+	}
+
+	// Dependency Injection
+	userRepo := repository.NewUserRepository(db)
+	authService := service.NewAuthService(userRepo, fbApp, cfg.JWTSecret)
+	authHandler := handler.NewAuthHandler(authService)
+
+	// Router Setup
+	r := gin.Default()
+
+	auth := r.Group("/api/v1/auth")
+	{
+		auth.POST("/register", authHandler.Register)
+		auth.POST("/login", authHandler.Login)
+		auth.POST("/google", authHandler.GoogleLogin)
+	}
+
 	log.Printf("🚀 [%s] running on port %s", cfg.ServiceName, cfg.Port)
+	if err := r.Run(":" + cfg.Port); err != nil {
+		log.Fatalf("❌ Failed to start server: %v", err)
+	}
 }
