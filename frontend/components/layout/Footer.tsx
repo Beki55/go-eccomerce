@@ -7,7 +7,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
           <div className="lg:col-span-1">
-            <span className="font-serif text-3xl font-bold gold-text tracking-[0.15em]">LUXE</span>
+            <span className="font-serif text-3xl font-bold gold-text tracking-[0.15em]">BkShop</span>
             <p className="mt-4 text-sm text-muted-foreground leading-relaxed font-light">
               Curating the world&apos;s finest luxury goods since 1998. We believe that true luxury is not just about objects — it&apos;s about the experience.
             </p>
@@ -97,7 +97,7 @@ export default function Footer() {
 
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground font-light">
-            &copy; {new Date().getFullYear()} LUXE. All rights reserved.
+            &copy; {new Date().getFullYear()} BkShop. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             {['Privacy Policy', 'Terms of Service', 'Authenticity'].map(item => (

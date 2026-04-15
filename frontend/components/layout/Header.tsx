@@ -59,7 +59,7 @@ export default function Header() {
                   className="font-serif text-3xl font-bold tracking-[0.15em] gold-text"
                   style={{ letterSpacing: '0.15em' }}
                 >
-                  LUXE
+                  BkShop
                 </span>
                 <div
                   className="absolute -bottom-1 left-0 right-0 h-px opacity-60"
