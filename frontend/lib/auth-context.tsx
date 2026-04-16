@@ -32,19 +32,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     useEffect(() => {
-        const token = localStorage.getItem("access_token");
-        if (token) {
-            // Logic to decode token or fetch user would go here
-            // For now we assume they are logged in if token exists
-        }
-        setLoading(false);
+        const checkAuth = async () => {
+            try {
+                const res = await api.get("/auth/me");
+                setUser(res.data);
+            } catch (error) {
+                // Not authenticated
+            }
+            setLoading(false);
+        };
+        checkAuth();
     }, []);
 
     const login = async (email: string, password: string) => {
         try {
             const res = await api.post("/auth/login", { email, password });
-            localStorage.setItem("access_token", res.data.access_token);
-            localStorage.setItem("refresh_token", res.data.refresh_token);
+            setUser(res.data);
         } catch (error) {
             throw error;
         }
@@ -52,7 +55,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const register = async (name: string, email: string, password: string) => {
         try {
-            await api.post("/auth/register", { name, email, password });
+            const res = await api.post("/auth/register", { name, email, password });
+            setUser(res.data);
         } catch (error) {
             throw error;
         }
@@ -63,16 +67,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const result = await signInWithPopup(auth, googleProvider);
             const idToken = await result.user.getIdToken();
             const res = await api.post("/auth/google", { id_token: idToken });
-            localStorage.setItem("access_token", res.data.access_token);
-            localStorage.setItem("refresh_token", res.data.refresh_token);
+            setUser(res.data);
         } catch (error) {
             throw error;
         }
     };
 
-    const logout = () => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
+    const logout = async () => {
+        try {
+            await api.post("/auth/logout");
+        } catch (error) {
+            console.error("Logout error:", error);
+        }
         setUser(null);
         fbSignOut(auth);
     };

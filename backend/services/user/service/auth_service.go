@@ -13,9 +13,9 @@ import (
 )
 
 type AuthService interface {
-	Register(ctx context.Context, name, email, password string) (*models.User, error)
-	Login(ctx context.Context, email, password string) (string, string, error) // access, refresh
-	GoogleLogin(ctx context.Context, idToken string) (string, string, error)
+	Register(ctx context.Context, name, email, password string) (*models.User, string, string, error) // user, access, refresh
+	Login(ctx context.Context, email, password string) (*models.User, string, string, error) // user, access, refresh
+	GoogleLogin(ctx context.Context, idToken string) (*models.User, string, string, error)
 }
 
 type authService struct {
@@ -32,10 +32,10 @@ func NewAuthService(repo repository.UserRepository, firebaseUtils *utils.Firebas
 	}
 }
 
-func (s *authService) Register(ctx context.Context, name, email, password string) (*models.User, error) {
+func (s *authService) Register(ctx context.Context, name, email, password string) (*models.User, string, string, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, err
+		return nil, "", "", err
 	}
 
 	user := &models.User{
@@ -47,39 +47,49 @@ func (s *authService) Register(ctx context.Context, name, email, password string
 	}
 
 	if err := s.repo.Create(user); err != nil {
-		return nil, err
-	}
-
-	return user, nil
-}
-
-func (s *authService) Login(ctx context.Context, email, password string) (string, string, error) {
-	user, err := s.repo.FindByEmail(email)
-	if err != nil {
-		return "", "", errors.New("invalid credentials")
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", "", errors.New("invalid credentials")
+		return nil, "", "", err
 	}
 
 	accessToken, err := utils.GenerateToken(user.ID, string(user.Role), s.jwtSecret, 15*time.Minute)
 	if err != nil {
-		return "", "", err
+		return nil, "", "", err
 	}
 
 	refreshToken, err := utils.GenerateToken(user.ID, string(user.Role), s.jwtSecret, 7*24*time.Hour)
 	if err != nil {
-		return "", "", err
+		return nil, "", "", err
 	}
 
-	return accessToken, refreshToken, nil
+	return user, accessToken, refreshToken, nil
 }
 
-func (s *authService) GoogleLogin(ctx context.Context, idToken string) (string, string, error) {
+func (s *authService) Login(ctx context.Context, email, password string) (*models.User, string, string, error) {
+	user, err := s.repo.FindByEmail(email)
+	if err != nil {
+		return nil, "", "", errors.New("invalid credentials")
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+		return nil, "", "", errors.New("invalid credentials")
+	}
+
+	accessToken, err := utils.GenerateToken(user.ID, string(user.Role), s.jwtSecret, 15*time.Minute)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	refreshToken, err := utils.GenerateToken(user.ID, string(user.Role), s.jwtSecret, 7*24*time.Hour)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	return user, accessToken, refreshToken, nil
+}
+
+func (s *authService) GoogleLogin(ctx context.Context, idToken string) (*models.User, string, string, error) {
 	decodedToken, err := s.firebaseUtils.VerifyIDToken(ctx, idToken)
 	if err != nil {
-		return "", "", err
+		return nil, "", "", err
 	}
 
 	email := decodedToken.Claims["email"].(string)
@@ -95,19 +105,19 @@ func (s *authService) GoogleLogin(ctx context.Context, idToken string) (string, 
 			IsActive: true,
 		}
 		if err := s.repo.Create(user); err != nil {
-			return "", "", err
+			return nil, "", "", err
 		}
 	}
 
 	accessToken, err := utils.GenerateToken(user.ID, string(user.Role), s.jwtSecret, 15*time.Minute)
 	if err != nil {
-		return "", "", err
+		return nil, "", "", err
 	}
 
 	refreshToken, err := utils.GenerateToken(user.ID, string(user.Role), s.jwtSecret, 7*24*time.Hour)
 	if err != nil {
-		return "", "", err
+		return nil, "", "", err
 	}
 
-	return accessToken, refreshToken, nil
+	return user, accessToken, refreshToken, nil
 }

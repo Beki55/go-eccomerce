@@ -28,11 +28,15 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	user, err := h.authService.Register(c.Request.Context(), req.Name, req.Email, req.Password)
+	user, access, refresh, err := h.authService.Register(c.Request.Context(), req.Name, req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	// Set cookies
+	c.SetCookie("access_token", access, 15*60, "/", "", false, true)
+	c.SetCookie("refresh_token", refresh, 7*24*60*60, "/", "", false, true)
 
 	c.JSON(http.StatusCreated, user)
 }
@@ -49,16 +53,36 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.authService.Login(c.Request.Context(), req.Email, req.Password)
+	user, access, refresh, err := h.authService.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"access_token":  access,
-		"refresh_token": refresh,
-	})
+	// Set cookies
+	c.SetCookie("access_token", access, 15*60, "/", "", false, true) // 15 minutes
+	c.SetCookie("refresh_token", refresh, 7*24*60*60, "/", "", false, true) // 7 days
+
+	c.JSON(http.StatusOK, user)
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+	// Clear cookies
+	c.SetCookie("access_token", "", -1, "/", "", false, true)
+	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+
+	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
+}
+
+func (h *AuthHandler) Me(c *gin.Context) {
+	// Get user from context (assuming middleware sets it)
+	user, exists := c.Get("user")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }
 
 type googleAuthRequest struct {
@@ -72,14 +96,15 @@ func (h *AuthHandler) GoogleLogin(c *gin.Context) {
 		return
 	}
 
-	access, refresh, err := h.authService.GoogleLogin(c.Request.Context(), req.IDToken)
+	user, access, refresh, err := h.authService.GoogleLogin(c.Request.Context(), req.IDToken)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"access_token":  access,
-		"refresh_token": refresh,
-	})
+	// Set cookies
+	c.SetCookie("access_token", access, 15*60, "/", "", false, true)
+	c.SetCookie("refresh_token", refresh, 7*24*60*60, "/", "", false, true)
+
+	c.JSON(http.StatusOK, user)
 }

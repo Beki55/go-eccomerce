@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/beki55/go-ecommerce/pkg/config"
@@ -53,29 +54,44 @@ func main() {
 	authService := service.NewAuthService(userRepo, fbApp, cfg.JWTSecret)
 	authHandler := handler.NewAuthHandler(authService)
 
-	// Router Setup
-	r := gin.Default()
-
-	// CORS middleware
-	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+	// Auth middleware
+	authMiddleware := func(c *gin.Context) {
+		token, err := c.Cookie("access_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "no token"})
+			c.Abort()
 			return
 		}
 
+		claims, err := utils.ValidateToken(token, cfg.JWTSecret)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			c.Abort()
+			return
+		}
+
+		// Fetch user
+		user, err := userRepo.FindByID(claims.UserID)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not found"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user", user)
 		c.Next()
-	})
+	}
+
+	// Router Setup
+	r := gin.Default()
 
 	auth := r.Group("/api/v1/auth")
 	{
 		auth.POST("/register", authHandler.Register)
 		auth.POST("/login", authHandler.Login)
 		auth.POST("/google", authHandler.GoogleLogin)
+		auth.POST("/logout", authHandler.Logout)
+		auth.GET("/me", authMiddleware, authHandler.Me)
 	}
 
 	log.Printf("🚀 [%s] running on port %s", cfg.ServiceName, cfg.Port)
