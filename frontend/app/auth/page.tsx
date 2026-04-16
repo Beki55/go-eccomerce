@@ -23,6 +23,14 @@ export default function AuthPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Form states - must be declared before any conditional returns
+  const [loginData, setLoginData] = useState({ email: "", password: "" });
+  const [registerData, setRegisterData] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
   // Redirect if already authenticated
   useEffect(() => {
     if (!loading && user) {
@@ -44,21 +52,12 @@ export default function AuthPage() {
     return null;
   }
 
-  // Form states
-  const [loginData, setLoginData] = useState({ email: "", password: "" });
-  const [registerData, setRegisterData] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       await login(loginData.email, loginData.password);
       toast.success("Logged in successfully!");
-      router.push("/");
     } catch (error: any) {
       console.error(error);
       toast.error(error.response?.data?.error || "Login failed");
@@ -90,7 +89,6 @@ export default function AuthPage() {
     try {
       await googleLogin();
       toast.success("Logged in with Google!");
-      router.push("/");
     } catch (error: any) {
       console.error(error);
       toast.error("Google login failed");

@@ -8,7 +8,7 @@ import Footer from '@/components/layout/Footer';
 import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
-  title: 'LUXE — Elevated Living',
+  title: 'BkShop | Home Page',
   description: 'Discover the world\'s finest luxury goods, curated for those who demand excellence.',
 };
 
