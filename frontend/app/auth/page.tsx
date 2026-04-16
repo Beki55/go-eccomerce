@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +12,30 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 export default function AuthPage() {
-    const { login, register, googleLogin } = useAuth();
+    const { login, register, googleLogin, user, loading } = useAuth();
+    const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+
+    // Redirect if already authenticated
+    useEffect(() => {
+        if (!loading && user) {
+            router.push("/");
+        }
+    }, [user, loading, router]);
+
+    // Show loading while checking auth
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+            </div>
+        );
+    }
+
+    // Don't render if authenticated
+    if (user) {
+        return null;
+    }
 
     // Form states
     const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -24,7 +47,7 @@ export default function AuthPage() {
         try {
             await login(loginData.email, loginData.password);
             toast.success("Logged in successfully!");
-            window.location.href = "/";
+            router.push("/");
         } catch (error: any) {
             console.error(error);
             toast.error(error.response?.data?.error || "Login failed");
@@ -52,7 +75,7 @@ export default function AuthPage() {
         try {
             await googleLogin();
             toast.success("Logged in with Google!");
-            window.location.href = "/";
+            router.push("/");
         } catch (error: any) {
             console.error(error);
             toast.error("Google login failed");

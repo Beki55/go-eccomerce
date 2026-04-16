@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -9,6 +11,7 @@ import GoldBackground from '@/components/ui/GoldBackground';
 import ProductCard from '@/components/ui/ProductCard';
 import StarRating from '@/components/ui/StarRating';
 import { products, testimonials, categories } from '@/lib/products';
+import { useAuth } from '@/lib/auth-context';
 
 const featuredProducts = products.slice(0, 4);
 
@@ -37,6 +40,23 @@ const categoryImages = [
 ];
 
 export default function HomePage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/auth");
+    }
+  }, [user, loading, router]);
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="relative overflow-hidden">
       <GoldBackground />
@@ -55,6 +75,19 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto">
+          {user && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="mb-6"
+            >
+              <p className="font-sans text-sm tracking-widest uppercase" style={{ color: '#D4AF37' }}>
+                Welcome back, {user.name}
+              </p>
+            </motion.div>
+          )}
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

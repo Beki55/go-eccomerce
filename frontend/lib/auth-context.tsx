@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
+    withCredentials: true, // Important for cookies
   });
 
   useEffect(() => {

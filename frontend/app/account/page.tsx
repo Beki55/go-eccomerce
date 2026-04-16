@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,6 +9,7 @@ import { User, Package, Heart, MapPin, Settings, LogOut, ChevronRight, Star, Cre
 import GoldBackground from '@/components/ui/GoldBackground';
 import StarRating from '@/components/ui/StarRating';
 import { products } from '@/lib/products';
+import { useAuth } from '@/lib/auth-context';
 
 const mockOrders = [
   { id: 'LUXE-A8F2K3', date: 'April 10, 2026', status: 'Delivered', items: 2, total: 1090, product: products[0] },
@@ -43,9 +45,32 @@ const navItems = [
 ];
 
 export default function AccountPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
   const [wishlist, setWishlist] = useState(mockWishlist);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/auth");
+    }
+  }, [user, loading, router]);
+
+  // Show loading
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) {
+    return null;
+  }
 
   const handleSave = () => {
     setSavedSuccess(true);
