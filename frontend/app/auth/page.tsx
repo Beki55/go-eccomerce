@@ -41,8 +41,8 @@ export default function AuthPage() {
   // Show loading while checking auth
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 dark:border-white"></div>
       </div>
     );
   }
@@ -98,19 +98,19 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-zinc-950 p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <Card className="border-zinc-800 bg-zinc-900/50 backdrop-blur-xl">
+        <Card className="border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 backdrop-blur-xl shadow-lg">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold tracking-tight text-white text-center">
+            <CardTitle className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white text-center">
               Authentication
             </CardTitle>
-            <CardDescription className="text-zinc-400 text-center">
+            <CardDescription className="text-gray-600 dark:text-zinc-400 text-center">
               Welcome to our platform
             </CardDescription>
           </CardHeader>
@@ -118,7 +118,7 @@ export default function AuthPage() {
             <div className="grid grid-cols-1">
               <Button
                 variant="outline"
-                className="border-zinc-800 bg-zinc-900 text-white hover:bg-zinc-800 h-11"
+                className="border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-zinc-700 h-11"
                 onClick={handleGoogleLogin}
                 disabled={isLoading}
               >
@@ -145,25 +145,25 @@ export default function AuthPage() {
             </div>
             <div className="relative my-2">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-zinc-800" />
+                <span className="w-full border-t border-gray-300 dark:border-zinc-800" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-[#0c0c0e] px-2 text-zinc-500">
+                <span className="bg-gray-50 dark:bg-zinc-900 px-2 text-gray-600 dark:text-zinc-500">
                   Or continue with
                 </span>
               </div>
             </div>
             <Tabs defaultValue="login" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-zinc-900 border border-zinc-800 h-10 p-1">
+              <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-zinc-900 border border-gray-300 dark:border-zinc-800 h-10 p-1">
                 <TabsTrigger
                   value="login"
-                  className="rounded-sm data-[state=active]:bg-zinc-800 text-zinc-400 data-[state=active]:text-white"
+                  className="rounded-sm data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 text-gray-700 dark:text-zinc-300 data-[state=active]:text-gray-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm"
                 >
                   Login
                 </TabsTrigger>
                 <TabsTrigger
                   value="register"
-                  className="rounded-sm data-[state=active]:bg-zinc-800 text-zinc-400 data-[state=active]:text-white"
+                  className="rounded-sm data-[state=active]:bg-white dark:data-[state=active]:bg-zinc-800 text-gray-700 dark:text-zinc-300 data-[state=active]:text-gray-900 dark:data-[state=active]:text-white data-[state=active]:shadow-sm"
                 >
                   Register
                 </TabsTrigger>
@@ -173,7 +173,7 @@ export default function AuthPage() {
                   <div className="space-y-2">
                     <Label
                       htmlFor="email"
-                      className="text-zinc-400 text-xs font-medium uppercase tracking-wider"
+                      className="text-gray-700 dark:text-zinc-400 text-xs font-medium uppercase tracking-wider"
                     >
                       Email Address
                     </Label>
@@ -182,7 +182,7 @@ export default function AuthPage() {
                       type="email"
                       placeholder="name@company.com"
                       required
-                      className="border-zinc-800 bg-zinc-900/50 text-white focus:ring-zinc-700 h-11"
+                      className="border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-gray-900 dark:text-white focus:ring-gray-500 dark:focus:ring-zinc-700 h-11"
                       value={loginData.email}
                       onChange={(e) =>
                         setLoginData({ ...loginData, email: e.target.value })
@@ -193,13 +193,13 @@ export default function AuthPage() {
                     <div className="flex items-center justify-between">
                       <Label
                         htmlFor="password"
-                        className="text-zinc-400 text-xs font-medium uppercase tracking-wider"
+                        className="text-gray-700 dark:text-zinc-400 text-xs font-medium uppercase tracking-wider"
                       >
                         Password
                       </Label>
                       <a
                         href="#"
-                        className="text-xs text-zinc-500 hover:text-white transition-colors"
+                        className="text-xs text-gray-500 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors"
                       >
                         Forgot password?
                       </a>
@@ -208,7 +208,7 @@ export default function AuthPage() {
                       id="password"
                       type="password"
                       required
-                      className="border-zinc-800 bg-zinc-900/50 text-white focus:ring-zinc-700 h-11"
+                      className="border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-gray-900 dark:text-white focus:ring-gray-500 dark:focus:ring-zinc-700 h-11"
                       value={loginData.password}
                       onChange={(e) =>
                         setLoginData({ ...loginData, password: e.target.value })
@@ -216,7 +216,7 @@ export default function AuthPage() {
                     />
                   </div>
                   <Button
-                    className="w-full bg-white text-black hover:bg-zinc-200 h-11 transition-all duration-200 font-semibold"
+                    className="w-full bg-gray-900 dark:bg-zinc-600 text-white dark:text-white hover:bg-gray-800 dark:hover:bg-gray-200 h-11 transition-all duration-200 font-semibold"
                     type="submit"
                     disabled={isLoading}
                   >
@@ -229,7 +229,7 @@ export default function AuthPage() {
                   <div className="space-y-2">
                     <Label
                       htmlFor="name"
-                      className="text-zinc-400 text-xs font-medium uppercase tracking-wider"
+                      className="text-gray-700 dark:text-zinc-400 text-xs font-medium uppercase tracking-wider"
                     >
                       Full Name
                     </Label>
@@ -238,7 +238,7 @@ export default function AuthPage() {
                       type="text"
                       placeholder="John Doe"
                       required
-                      className="border-zinc-800 bg-zinc-900/50 text-white focus:ring-zinc-700 h-11"
+                      className="border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-gray-900 dark:text-white focus:ring-gray-500 dark:focus:ring-zinc-700 h-11"
                       value={registerData.name}
                       onChange={(e) =>
                         setRegisterData({
@@ -251,7 +251,7 @@ export default function AuthPage() {
                   <div className="space-y-2">
                     <Label
                       htmlFor="reg-email"
-                      className="text-zinc-400 text-xs font-medium uppercase tracking-wider"
+                      className="text-gray-700 dark:text-zinc-400 text-xs font-medium uppercase tracking-wider"
                     >
                       Email Address
                     </Label>
@@ -260,7 +260,7 @@ export default function AuthPage() {
                       type="email"
                       placeholder="name@company.com"
                       required
-                      className="border-zinc-800 bg-zinc-900/50 text-white focus:ring-zinc-700 h-11"
+                      className="border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-gray-900 dark:text-white focus:ring-gray-500 dark:focus:ring-zinc-700 h-11"
                       value={registerData.email}
                       onChange={(e) =>
                         setRegisterData({
@@ -273,7 +273,7 @@ export default function AuthPage() {
                   <div className="space-y-2">
                     <Label
                       htmlFor="reg-password"
-                      className="text-zinc-400 text-xs font-medium uppercase tracking-wider"
+                      className="text-gray-700 dark:text-zinc-400 text-xs font-medium uppercase tracking-wider"
                     >
                       Password
                     </Label>
@@ -281,7 +281,7 @@ export default function AuthPage() {
                       id="reg-password"
                       type="password"
                       required
-                      className="border-zinc-800 bg-zinc-900/50 text-white focus:ring-zinc-700 h-11"
+                      className="border-gray-300 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-gray-900 dark:text-white focus:ring-gray-500 dark:focus:ring-zinc-700 h-11"
                       value={registerData.password}
                       onChange={(e) =>
                         setRegisterData({
@@ -292,7 +292,7 @@ export default function AuthPage() {
                     />
                   </div>
                   <Button
-                    className="w-full bg-white text-black hover:bg-zinc-200 h-11 transition-all duration-200 font-semibold"
+                    className="w-full bg-gray-900 dark:bg-zinc-600 text-white dark:text-white hover:bg-gray-800 dark:hover:bg-gray-200 h-11 transition-all duration-200 font-semibold"
                     type="submit"
                     disabled={isLoading}
                   >
@@ -303,18 +303,18 @@ export default function AuthPage() {
             </Tabs>
           </CardContent>
           <CardFooter>
-            <p className="px-8 text-center text-xs text-zinc-500 leading-relaxed">
+            <p className="px-8 text-center text-xs text-gray-500 dark:text-zinc-500 leading-relaxed">
               By continuing, you agree to our{" "}
               <a
                 href="#"
-                className="underline underline-offset-4 hover:text-white transition-colors"
+                className="underline underline-offset-4 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors"
               >
                 Terms of Service
               </a>{" "}
               and{" "}
               <a
                 href="#"
-                className="underline underline-offset-4 hover:text-white transition-colors"
+                className="underline underline-offset-4 hover:text-gray-700 dark:hover:text-zinc-300 transition-colors"
               >
                 Privacy Policy
               </a>

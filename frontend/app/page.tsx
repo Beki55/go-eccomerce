@@ -49,19 +49,19 @@ export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push("/auth");
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  // useEffect(() => {
+  //   if (!loading && !user) {
+  //     router.push("/auth");
+  //   }
+  // }, [user, loading, router]);
+  //
+  // if (loading || !user) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="relative overflow-hidden">
