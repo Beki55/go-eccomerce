@@ -216,7 +216,7 @@ export default function AuthPage() {
                     />
                   </div>
                   <Button
-                    className="w-full bg-gray-900 dark:bg-zinc-600 text-white dark:text-white hover:bg-gray-800 dark:hover:bg-gray-200 h-11 transition-all duration-200 font-semibold"
+                    className="w-full bg-gray-900 dark:bg-zinc-600 text-white dark:text-white hover:bg-gray-800 dark:hover:bg-gray-700 h-11 transition-all duration-200 font-semibold"
                     type="submit"
                     disabled={isLoading}
                   >
@@ -292,7 +292,7 @@ export default function AuthPage() {
                     />
                   </div>
                   <Button
-                    className="w-full bg-gray-900 dark:bg-zinc-600 text-white dark:text-white hover:bg-gray-800 dark:hover:bg-gray-200 h-11 transition-all duration-200 font-semibold"
+                    className="w-full bg-gray-900 dark:bg-zinc-600 text-white dark:text-white hover:bg-gray-800 dark:hover:bg-gray-700 h-11 transition-all duration-200 font-semibold"
                     type="submit"
                     disabled={isLoading}
                   >
