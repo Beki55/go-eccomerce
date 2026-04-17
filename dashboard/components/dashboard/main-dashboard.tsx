@@ -1,13 +1,13 @@
-import { WelcomeCard } from "@/components/dashboard/welcome-card"
-import { RoomCard } from "@/components/dashboard/room-card"
-import { DeviceCard } from "@/components/dashboard/device-card"
-import { AirConditioning } from "@/components/dashboard/air-conditioning"
-import { UsersWidget } from "@/components/dashboard/users"
-import { ConsumptionChart } from "@/components/dashboard/consumption-chart"
-import { Shortcuts } from "@/components/dashboard/shortcuts"
-import { LightPanels } from "@/components/dashboard/light-panels"
-import { Scenes } from "@/components/dashboard/scenes"
-import EnergyWidget from "@/components/dashboard/energy-widget"
+import { WelcomeCard } from "@/components/dashboard/welcome-card";
+import { RoomCard } from "@/components/dashboard/room-card";
+import { DeviceCard } from "@/components/dashboard/device-card";
+import { AirConditioning } from "@/components/dashboard/air-conditioning";
+import { UsersWidget } from "@/components/dashboard/users";
+import { ConsumptionChart } from "@/components/dashboard/consumption-chart";
+import { Shortcuts } from "@/components/dashboard/shortcuts";
+import { LightPanels } from "@/components/dashboard/light-panels";
+import { Scenes } from "@/components/dashboard/scenes";
+import EnergyWidget from "@/components/dashboard/energy-widget";
 
 export function MainDashboard() {
   return (
@@ -21,10 +21,19 @@ export function MainDashboard() {
           <section className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-sm font-semibold text-foreground">Rooms</h2>
-              <span className="text-[10px] text-muted-foreground">Master bed room ▾</span>
+              <span className="text-[10px] text-muted-foreground">
+                Master bed room ▾
+              </span>
             </div>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-              {["Living Room", "Kitchen", "Bed Room", "Bathroom", "Bed Room", "Bathroom"].map((r, i) => (
+              {[
+                "Living Room",
+                "Kitchen",
+                "Bed Room",
+                "Bathroom",
+                "Bed Room",
+                "Bathroom",
+              ].map((r, i) => (
                 <RoomCard key={i} title={r} />
               ))}
             </div>
@@ -34,8 +43,9 @@ export function MainDashboard() {
           <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border">
               <div className="mb-3 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-foreground">Popular Devices</h2>
-
+                <h2 className="text-sm font-semibold text-foreground">
+                  Popular Devices
+                </h2>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <DeviceCard title="Refrigerator" icon="fridge" />
@@ -47,7 +57,6 @@ export function MainDashboard() {
             <div className="rounded-2xl bg-card p-5 shadow-sm ring-1 ring-border">
               <div className="mb-3 flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-foreground">Scene</h2>
-
               </div>
               <Scenes />
             </div>
@@ -72,7 +81,6 @@ export function MainDashboard() {
       </div>
 
       <LightPanels />
-
     </div>
-  )
+  );
 }

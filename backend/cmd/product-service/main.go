@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/beki55/go-ecommerce/pkg/config"
 	"github.com/beki55/go-ecommerce/pkg/database"
@@ -41,18 +40,6 @@ func main() {
 		log.Fatalf("❌ [%s] Migration failed: %v", cfg.ServiceName, err)
 	}
 
-	// Firebase Init (optional for product service)
-	firebaseCreds := os.Getenv("FIREBASE_CREDENTIALS_PATH")
-	if firebaseCreds == "" {
-		firebaseCreds = "./firebase-credentials.json"
-	}
-
-	fbApp, err := utils.InitFirebase(firebaseCreds)
-	if err != nil {
-		log.Printf("⚠️  Firebase initialization failed (Google Auth will be disabled): %v", err)
-	}
-	_ = fbApp // May be used for future features
-
 	// Dependency Injection
 	productRepo := repository.NewProductRepository(db)
 	productService := service.NewProductService(productRepo)
@@ -88,14 +75,6 @@ func main() {
 
 	// Setup Gin router
 	r := gin.Default()
-
-	// Health check
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status":  "UP",
-			"service": cfg.ServiceName,
-		})
-	})
 
 	// API routes
 	api := r.Group("/api/v1")
