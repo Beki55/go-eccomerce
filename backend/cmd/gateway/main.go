@@ -26,12 +26,15 @@ func main() {
 		{Name: "user-service", BaseURL: "http://localhost:8081", Prefix: "/api/v1/auth"},
 		{Name: "user-service", BaseURL: "http://localhost:8081", Prefix: "/api/v1/users"},
 		{Name: "product-service", BaseURL: "http://localhost:8082", Prefix: "/api/v1/products"},
+		{Name: "product-service", BaseURL: "http://localhost:8082", Prefix: "/api/v1/categories"},
+		{Name: "product-service", BaseURL: "http://localhost:8082", Prefix: "/api/v1/brands"},
 		{Name: "cart-service", BaseURL: "http://localhost:8083", Prefix: "/api/v1/cart"},
 		{Name: "order-service", BaseURL: "http://localhost:8084", Prefix: "/api/v1/orders"},
 		{Name: "payment-service", BaseURL: "http://localhost:8085", Prefix: "/api/v1/payments"},
 		{Name: "review-service", BaseURL: "http://localhost:8086", Prefix: "/api/v1/reviews"},
 		{Name: "coupon-service", BaseURL: "http://localhost:8087", Prefix: "/api/v1/coupons"},
 		{Name: "notification-service", BaseURL: "http://localhost:8088", Prefix: "/api/v1/notifications"},
+		{Name: "product-service", BaseURL: "http://localhost:8082", Prefix: "/uploads"},
 	}
 
 	r := gin.Default()
@@ -128,8 +131,7 @@ func main() {
 
 		// Route handler with conditional middleware
 		handler := func(c *gin.Context) {
-			// Apply admin auth middleware for product routes
-			if svc.Name == "product-service" {
+			if svc.Name == "product-service" && c.Request.Method != http.MethodGet {
 				adminAuthMiddleware(c)
 				if c.IsAborted() {
 					return

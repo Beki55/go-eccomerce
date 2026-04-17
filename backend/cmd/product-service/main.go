@@ -76,6 +76,9 @@ func main() {
 	// Setup Gin router
 	r := gin.Default()
 
+	// Serve static files for product images
+	r.Static("/uploads", "./uploads")
+
 	// API routes
 	api := r.Group("/api/v1")
 	{
@@ -84,6 +87,7 @@ func main() {
 		{
 			products.GET("", productHandler.ListProducts)
 			products.GET("/:id", productHandler.GetProduct)
+			products.GET("/:id/variants", productHandler.ListVariants)
 			products.GET("/slug/:slug", productHandler.GetProductBySlug)
 			products.GET("/low-stock", productHandler.GetLowStockProducts)
 		}
@@ -109,10 +113,16 @@ func main() {
 			// Admin product routes
 			adminProducts := admin.Group("/products")
 			{
+				adminProducts.POST("/upload", productHandler.UploadImages)
 				adminProducts.POST("", productHandler.CreateProduct)
 				adminProducts.PUT("/:id", productHandler.UpdateProduct)
 				adminProducts.DELETE("/:id", productHandler.DeleteProduct)
 				adminProducts.PUT("/:id/stock", productHandler.UpdateStock)
+
+				// Variant routes
+				adminProducts.POST("/:id/variants", productHandler.CreateVariant)
+				adminProducts.PUT("/variants/:variantId", productHandler.UpdateVariant)
+				adminProducts.DELETE("/variants/:variantId", productHandler.DeleteVariant)
 			}
 
 			// Admin category routes

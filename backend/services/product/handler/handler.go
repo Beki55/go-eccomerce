@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/beki55/go-ecommerce/services/product/models"
@@ -24,31 +25,31 @@ func NewProductHandler(productService service.ProductService) *ProductHandler {
 // Product Handlers
 func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	var req struct {
-		CategoryID         *uuid.UUID       `json:"category_id"`
+		CategoryID        *uuid.UUID       `json:"category_id"`
 		BrandID           *uuid.UUID       `json:"brand_id"`
 		VendorID          *uuid.UUID       `json:"vendor_id"`
-		SKU               string          `json:"sku"`
-		Name              string          `json:"name" binding:"required"`
-		Slug              string          `json:"slug"`
-		ShortDescription  *string         `json:"short_description"`
-		Description       *string         `json:"description"`
-		Price             decimal.Decimal `json:"price" binding:"required"`
+		SKU               string           `json:"sku"`
+		Name              string           `json:"name" binding:"required"`
+		Slug              string           `json:"slug"`
+		ShortDescription  *string          `json:"short_description"`
+		Description       *string          `json:"description"`
+		Price             decimal.Decimal  `json:"price" binding:"required"`
 		ComparePrice      *decimal.Decimal `json:"compare_price"`
 		CostPerItem       *decimal.Decimal `json:"cost_per_item"`
-		StockQuantity     int             `json:"stock_quantity"`
-		LowStockThreshold int             `json:"low_stock_threshold"`
+		StockQuantity     int              `json:"stock_quantity"`
+		LowStockThreshold int              `json:"low_stock_threshold"`
 		Weight            *decimal.Decimal `json:"weight"`
-		Dimensions        interface{}     `json:"dimensions"`
-		Images            []string        `json:"images"`
-		VideoURL          *string         `json:"video_url"`
-		Attributes        interface{}     `json:"attributes"`
-		Tags              []string        `json:"tags"`
-		IsActive          bool            `json:"is_active"`
-		IsFeatured        bool            `json:"is_featured"`
-		IsDigital         bool            `json:"is_digital"`
-		DownloadableFile  *string         `json:"downloadable_file"`
-		MetaTitle         *string         `json:"meta_title"`
-		MetaDescription   *string         `json:"meta_description"`
+		Dimensions        interface{}      `json:"dimensions"`
+		Images            []string         `json:"images"`
+		VideoURL          *string          `json:"video_url"`
+		Attributes        interface{}      `json:"attributes"`
+		Tags              []string         `json:"tags"`
+		IsActive          bool             `json:"is_active"`
+		IsFeatured        bool             `json:"is_featured"`
+		IsDigital         bool             `json:"is_digital"`
+		DownloadableFile  *string          `json:"downloadable_file"`
+		MetaTitle         *string          `json:"meta_title"`
+		MetaDescription   *string          `json:"meta_description"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -63,7 +64,7 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	tagsJSON, _ := json.Marshal(req.Tags)
 
 	product := &models.Product{
-		CategoryID:         req.CategoryID,
+		CategoryID:        req.CategoryID,
 		BrandID:           req.BrandID,
 		VendorID:          req.VendorID,
 		SKU:               req.SKU,
@@ -416,8 +417,8 @@ func (h *ProductHandler) UpdateStock(c *gin.Context) {
 	}
 
 	var req struct {
-		Quantity   int     `json:"quantity" binding:"required"`
-		Reason     string  `json:"reason" binding:"required"`
+		Quantity    int     `json:"quantity" binding:"required"`
+		Reason      string  `json:"reason" binding:"required"`
 		ReferenceID *string `json:"reference_id"`
 	}
 
@@ -450,4 +451,130 @@ func (h *ProductHandler) GetLowStockProducts(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, products)
+}
+
+func (h *ProductHandler) UploadImages(c *gin.Context) {
+	form, err := c.MultipartForm()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "failed to parse multipart form"})
+		return
+	}
+
+	files := form.File["images"]
+	var urls []string
+
+	for _, file := range files {
+		// Generate unique filename
+		filename := uuid.New().String() + filepath.Ext(file.Filename)
+		dst := filepath.Join("uploads/products", filename)
+
+		// Upload the file
+		if err := c.SaveUploadedFile(file, dst); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file: " + err.Error()})
+			return
+		}
+
+		// Return the relative URL
+		urls = append(urls, "/uploads/products/"+filename)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "images uploaded successfully",
+		"urls":    urls,
+	})
+}
+
+// Variant Handlers
+func (h *ProductHandler) CreateVariant(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product ID"})
+		return
+	}
+
+	var req struct {
+		SKU             string          `json:"sku"`
+		Attributes      interface{}     `json:"attributes" binding:"required"`
+		PriceAdjustment decimal.Decimal `json:"price_adjustment"`
+		StockQuantity   int             `json:"stock_quantity"`
+		Images          []string        `json:"images"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	attributesJSON, _ := json.Marshal(req.Attributes)
+	imagesJSON, _ := json.Marshal(req.Images)
+
+	variant := &models.ProductVariant{
+		ProductID:       id,
+		SKU:             req.SKU,
+		Attributes:      datatypes.JSON(attributesJSON),
+		PriceAdjustment: req.PriceAdjustment,
+		StockQuantity:   req.StockQuantity,
+		Images:          datatypes.JSON(imagesJSON),
+	}
+
+	createdVariant, err := h.productService.CreateVariant(c.Request.Context(), variant)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, createdVariant)
+}
+
+func (h *ProductHandler) UpdateVariant(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("variantId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid variant ID"})
+		return
+	}
+
+	var updates map[string]interface{}
+	if err := c.ShouldBindJSON(&updates); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	updatedVariant, err := h.productService.UpdateVariant(c.Request.Context(), id, updates)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, updatedVariant)
+}
+
+func (h *ProductHandler) DeleteVariant(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("variantId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid variant ID"})
+		return
+	}
+
+	if err := h.productService.DeleteVariant(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "variant deleted successfully"})
+}
+
+func (h *ProductHandler) ListVariants(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product ID"})
+		return
+	}
+
+	variants, err := h.productService.GetProductVariants(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, variants)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/beki55/go-ecommerce/services/product/models"
@@ -137,17 +138,25 @@ func (s *productService) UpdateProduct(ctx context.Context, id uuid.UUID, update
 	if desc, ok := updates["description"].(string); ok {
 		product.Description = &desc
 	}
-	if price, ok := updates["price"].(decimal.Decimal); ok {
-		product.Price = price
+	if priceVal, ok := updates["price"]; ok {
+		if price, ok := convertToDecimal(priceVal); ok {
+			product.Price = price
+		}
 	}
-	if comparePrice, ok := updates["compare_price"].(decimal.Decimal); ok {
-		product.ComparePrice = &comparePrice
+	if comparePriceVal, ok := updates["compare_price"]; ok {
+		if comparePrice, ok := convertToDecimal(comparePriceVal); ok {
+			product.ComparePrice = &comparePrice
+		}
 	}
-	if stockQty, ok := updates["stock_quantity"].(int); ok {
-		product.StockQuantity = stockQty
+	if stockQtyVal, ok := updates["stock_quantity"]; ok {
+		if stockQty, ok := convertToInt(stockQtyVal); ok {
+			product.StockQuantity = stockQty
+		}
 	}
-	if lowStock, ok := updates["low_stock_threshold"].(int); ok {
-		product.LowStockThreshold = lowStock
+	if lowStockVal, ok := updates["low_stock_threshold"]; ok {
+		if lowStock, ok := convertToInt(lowStockVal); ok {
+			product.LowStockThreshold = lowStock
+		}
 	}
 	if isActive, ok := updates["is_active"].(bool); ok {
 		product.IsActive = isActive
@@ -158,14 +167,20 @@ func (s *productService) UpdateProduct(ctx context.Context, id uuid.UUID, update
 	if isDigital, ok := updates["is_digital"].(bool); ok {
 		product.IsDigital = isDigital
 	}
-	if categoryID, ok := updates["category_id"].(uuid.UUID); ok {
-		product.CategoryID = &categoryID
+	if categoryIDVal, ok := updates["category_id"]; ok {
+		if categoryID, ok := convertToUUID(categoryIDVal); ok {
+			product.CategoryID = &categoryID
+		}
 	}
-	if brandID, ok := updates["brand_id"].(uuid.UUID); ok {
-		product.BrandID = &brandID
+	if brandIDVal, ok := updates["brand_id"]; ok {
+		if brandID, ok := convertToUUID(brandIDVal); ok {
+			product.BrandID = &brandID
+		}
 	}
-	if vendorID, ok := updates["vendor_id"].(uuid.UUID); ok {
-		product.VendorID = &vendorID
+	if vendorIDVal, ok := updates["vendor_id"]; ok {
+		if vendorID, ok := convertToUUID(vendorIDVal); ok {
+			product.VendorID = &vendorID
+		}
 	}
 
 	// Validate updated product
@@ -212,12 +227,12 @@ func (s *productService) CreateCategory(ctx context.Context, category *models.Ca
 	}
 
 	// Ensure slug is unique
-	existing, _ := s.repo.GetCategoryByID(ctx, uuid.New()) // This is a hack, need to implement GetBySlug for categories
+	existing, _ := s.repo.GetCategoryBySlug(ctx, category.Slug)
 	counter := 1
 	originalSlug := category.Slug
 	for existing != nil {
 		category.Slug = fmt.Sprintf("%s-%d", originalSlug, counter)
-		// Check uniqueness logic here
+		existing, _ = s.repo.GetCategoryBySlug(ctx, category.Slug)
 		counter++
 	}
 
@@ -254,8 +269,10 @@ func (s *productService) UpdateCategory(ctx context.Context, id uuid.UUID, updat
 	if isActive, ok := updates["is_active"].(bool); ok {
 		category.IsActive = isActive
 	}
-	if sortOrder, ok := updates["sort_order"].(int); ok {
-		category.SortOrder = sortOrder
+	if sortOrderVal, ok := updates["sort_order"]; ok {
+		if sortOrder, ok := convertToInt(sortOrderVal); ok {
+			category.SortOrder = sortOrder
+		}
 	}
 
 	if err := s.repo.UpdateCategory(ctx, category); err != nil {
@@ -352,8 +369,30 @@ func (s *productService) CreateVariant(ctx context.Context, variant *models.Prod
 }
 
 func (s *productService) UpdateVariant(ctx context.Context, id uuid.UUID, updates map[string]interface{}) (*models.ProductVariant, error) {
-	// This would need to be implemented in repository first
-	return nil, errors.New("not implemented")
+	variant, err := s.repo.GetVariantByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if sku, ok := updates["sku"].(string); ok && sku != "" {
+		variant.SKU = sku
+	}
+	if priceAdjVal, ok := updates["price_adjustment"]; ok {
+		if priceAdj, ok := convertToDecimal(priceAdjVal); ok {
+			variant.PriceAdjustment = priceAdj
+		}
+	}
+	if stockQtyVal, ok := updates["stock_quantity"]; ok {
+		if stockQty, ok := convertToInt(stockQtyVal); ok {
+			variant.StockQuantity = stockQty
+		}
+	}
+
+	if err := s.repo.UpdateVariant(ctx, variant); err != nil {
+		return nil, err
+	}
+
+	return variant, nil
 }
 
 func (s *productService) DeleteVariant(ctx context.Context, id uuid.UUID) error {
@@ -426,4 +465,42 @@ func (s *productService) ValidateProduct(product *models.Product) error {
 	}
 
 	return nil
+}
+
+// Helper functions for type conversion from map[string]interface{} (used in updates)
+func convertToDecimal(v interface{}) (decimal.Decimal, bool) {
+	switch val := v.(type) {
+	case float64:
+		return decimal.NewFromFloat(val), true
+	case string:
+		d, err := decimal.NewFromString(val)
+		return d, err == nil
+	case decimal.Decimal:
+		return val, true
+	}
+	return decimal.Decimal{}, false
+}
+
+func convertToUUID(v interface{}) (uuid.UUID, bool) {
+	switch val := v.(type) {
+	case string:
+		u, err := uuid.Parse(val)
+		return u, err == nil
+	case uuid.UUID:
+		return val, true
+	}
+	return uuid.UUID{}, false
+}
+
+func convertToInt(v interface{}) (int, bool) {
+	switch val := v.(type) {
+	case float64:
+		return int(val), true
+	case int:
+		return val, true
+	case string:
+		i, err := strconv.Atoi(val)
+		return i, err == nil
+	}
+	return 0, false
 }

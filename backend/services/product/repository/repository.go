@@ -25,6 +25,7 @@ type ProductRepository interface {
 	// Category CRUD
 	CreateCategory(ctx context.Context, category *models.Category) error
 	GetCategoryByID(ctx context.Context, id uuid.UUID) (*models.Category, error)
+	GetCategoryBySlug(ctx context.Context, slug string) (*models.Category, error)
 	UpdateCategory(ctx context.Context, category *models.Category) error
 	DeleteCategory(ctx context.Context, id uuid.UUID) error
 	ListCategories(ctx context.Context, parentID *uuid.UUID) ([]*models.Category, error)
@@ -40,6 +41,7 @@ type ProductRepository interface {
 	CreateVariant(ctx context.Context, variant *models.ProductVariant) error
 	UpdateVariant(ctx context.Context, variant *models.ProductVariant) error
 	DeleteVariant(ctx context.Context, id uuid.UUID) error
+	GetVariantByID(ctx context.Context, id uuid.UUID) (*models.ProductVariant, error)
 	GetVariantsByProductID(ctx context.Context, productID uuid.UUID) ([]*models.ProductVariant, error)
 
 	// Inventory
@@ -169,6 +171,19 @@ func (r *productRepository) GetCategoryByID(ctx context.Context, id uuid.UUID) (
 	return &category, nil
 }
 
+func (r *productRepository) GetCategoryBySlug(ctx context.Context, slug string) (*models.Category, error) {
+	var category models.Category
+	err := r.db.WithContext(ctx).
+		Preload("Parent").
+		Preload("Children").
+		Where("slug = ?", slug).
+		First(&category).Error
+	if err != nil {
+		return nil, err
+	}
+	return &category, nil
+}
+
 func (r *productRepository) UpdateCategory(ctx context.Context, category *models.Category) error {
 	return r.db.WithContext(ctx).Save(category).Error
 }
@@ -235,6 +250,15 @@ func (r *productRepository) DeleteVariant(ctx context.Context, id uuid.UUID) err
 	return r.db.WithContext(ctx).Delete(&models.ProductVariant{}, id).Error
 }
 
+func (r *productRepository) GetVariantByID(ctx context.Context, id uuid.UUID) (*models.ProductVariant, error) {
+	var variant models.ProductVariant
+	err := r.db.WithContext(ctx).First(&variant, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &variant, nil
+}
+
 func (r *productRepository) GetVariantsByProductID(ctx context.Context, productID uuid.UUID) ([]*models.ProductVariant, error) {
 	var variants []*models.ProductVariant
 	err := r.db.WithContext(ctx).
@@ -288,8 +312,10 @@ func (r *productRepository) GetLowStockProducts(ctx context.Context) ([]*models.
 
 func (r *productRepository) GenerateSKU(ctx context.Context, categorySlug string) (string, error) {
 	prefix := "PRD"
-	if categorySlug != "" {
+	if len(categorySlug) >= 3 {
 		prefix = strings.ToUpper(categorySlug[:3])
+	} else if len(categorySlug) > 0 {
+		prefix = strings.ToUpper(categorySlug)
 	}
 
 	// Find the highest SKU with this prefix

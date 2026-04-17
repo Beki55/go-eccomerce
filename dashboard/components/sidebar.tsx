@@ -68,7 +68,7 @@ export function Sidebar() {
           <span
             className={`${open ? "block" : "hidden"} text-lg font-semibold`}
           >
-            BkShop
+            Admin
           </span>
         </div>
         <button
