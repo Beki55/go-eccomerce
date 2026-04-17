@@ -2,13 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
+import { authApi, User } from "./api";
 
 interface AuthContextType {
   user: User | null;
@@ -38,56 +32,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      const response = await fetch("http://localhost:8080/api/v1/auth/me", {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const userData = await response.json();
-        if (userData.role === "admin") {
-          setUser(userData);
-        } else {
-          // Not an admin, logout
-          await logout();
-        }
+      const response = await authApi.getCurrentUser();
+      if (response.data && response.data.role === "admin") {
+        setUser(response.data);
+      } else {
+        // Not an admin or no user data
+        setUser(null);
       }
     } catch (error) {
       console.error("Auth check failed:", error);
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
   const login = async (email: string, password: string) => {
-    const response = await fetch("http://localhost:8080/api/v1/auth/login", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify({ email, password }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || "Login failed");
+    const response = await authApi.login({ email, password });
+    if (!response.data) {
+      throw new Error(response.error || "Login failed");
     }
 
-    const userData = await response.json();
-
-    if (userData.role !== "admin") {
+    if (response.data.role !== "admin") {
       throw new Error("Access denied. Admin privileges required.");
     }
 
-    setUser(userData);
+    setUser(response.data);
   };
 
   const logout = async () => {
     try {
-      await fetch("http://localhost:8080/api/v1/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
+      await authApi.logout();
     } catch (error) {
       console.error("Logout failed:", error);
     }

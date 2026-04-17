@@ -7,6 +7,7 @@ import (
 	"net/url"
 
 	"github.com/beki55/go-ecommerce/pkg/config"
+	"github.com/beki55/go-ecommerce/pkg/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -34,6 +35,33 @@ func main() {
 	}
 
 	r := gin.Default()
+
+	// Admin authentication middleware
+	adminAuthMiddleware := func(c *gin.Context) {
+		token, err := c.Cookie("access_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "no token"})
+			c.Abort()
+			return
+		}
+
+		claims, err := utils.ValidateToken(token, cfg.JWTSecret)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			c.Abort()
+			return
+		}
+
+		// Check if user is admin
+		if claims.Role != "admin" {
+			c.JSON(http.StatusForbidden, gin.H{"error": "admin access required"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", claims.UserID)
+		c.Next()
+	}
 
 	// CORS middleware
 	r.Use(func(c *gin.Context) {
@@ -98,8 +126,15 @@ func main() {
 		proxy := httputil.NewSingleHostReverseProxy(target)
 		log.Printf("   ├── %s → %s (%s)", svc.Prefix, svc.BaseURL, svc.Name)
 
-		// Route handler for the proxy
+		// Route handler with conditional middleware
 		handler := func(c *gin.Context) {
+			// Apply admin auth middleware for product routes
+			if svc.Name == "product-service" {
+				adminAuthMiddleware(c)
+				if c.IsAborted() {
+					return
+				}
+			}
 			proxy.ServeHTTP(c.Writer, c.Request)
 		}
 

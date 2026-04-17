@@ -57,12 +57,7 @@ export default function DashboardLayout({
               <Topbar onMenuClick={() => setSidebarOpen(true)} />
               {children}
               <p className="mt-2 bottom-0">
-                © All rights reserved by{" "}
-                <a href="https://codescandy.com/">CodesCandy</a>. Distributed
-                by:{" "}
-                <a href="https://themewagon.com" target="_blank">
-                  ThemeWagon
-                </a>
+                © All rights reserved by BkShop.
               </p>
             </main>
           </div>

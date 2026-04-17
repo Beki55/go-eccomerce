@@ -7,8 +7,13 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Home,
-  MessageCircle,
+  Package,
+  FolderOpen,
+  Tag,
   BarChart3,
+  Users,
+  ShoppingCart,
+  MessageCircle,
   Shield,
   TabletSmartphone,
   UserRound,
@@ -23,9 +28,14 @@ type Item = {
 };
 
 const items: Item[] = [
-  { href: "/dashboard", label: "Home", icon: Home },
+  { href: "/dashboard", label: "Dashboard", icon: Home },
+  { href: "/products", label: "Products", icon: Package },
+  { href: "/categories", label: "Categories", icon: FolderOpen },
+  { href: "/brands", label: "Brands", icon: Tag },
+  { href: "/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/customers", label: "Customers", icon: Users },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/messages", label: "Messages", icon: MessageCircle },
-  { href: "/statistics", label: "Statistics", icon: BarChart3 },
   { href: "/security", label: "Security", icon: Shield },
   { href: "/devices", label: "Devices", icon: TabletSmartphone },
   { href: "/profile", label: "Profile", icon: UserRound },
