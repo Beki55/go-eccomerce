@@ -37,8 +37,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-  /* Default brand = purple */
-  --brand: oklch(0.61 0.24 300); /* purple */
+  /* Default brand = gold */
+  --brand: oklch(0.7 0.15 80); /* gold */
   --brand-2: color-mix(in oklab, var(--brand) 85%, white 15%);
 }
 
@@ -94,6 +94,31 @@
 [data-brand="pink"] {
   --brand: oklch(0.71 0.28 360);
 }
+[data-brand="gold"] {
+  --brand: oklch(0.7 0.15 80);
+}
+
+.gold-50 { color: #FFFDF0; }
+.gold-100 { color: #FFF8D6; }
+.gold-200 { color: #F5E6B8; }
+.gold-300 { color: #F0D080; }
+.gold-400 { color: #FFD700; }
+.gold-500 { color: #D4AF37; }
+.gold-600 { color: #B8860B; }
+.gold-700 { color: #8B7355; }
+.gold-800 { color: #5C4A1E; }
+.gold-900 { color: #3D3010; }
+
+.bg-gold-50 { background-color: #FFFDF0; }
+.bg-gold-100 { background-color: #FFF8D6; }
+.bg-gold-200 { background-color: #F5E6B8; }
+.bg-gold-300 { background-color: #F0D080; }
+.bg-gold-400 { background-color: #FFD700; }
+.bg-gold-500 { background-color: #D4AF37; }
+.bg-gold-600 { background-color: #B8860B; }
+.bg-gold-700 { background-color: #8B7355; }
+.bg-gold-800 { background-color: #5C4A1E; }
+.bg-gold-900 { background-color: #3D3010; }
 
 @theme inline {
   --font-sans: var(--font-geist-sans);
