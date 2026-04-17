@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { Bell, Search, Settings, User, Menu } from "lucide-react"
-import { useState } from "react"
+import { Bell, Search, Settings, User, Menu } from "lucide-react";
+import { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,16 +9,16 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+} from "@/components/ui/dropdown-menu";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface TopbarProps {
-  onMenuClick?: () => void
+  onMenuClick?: () => void;
 }
 
 export function Topbar({ onMenuClick }: TopbarProps) {
-  const [q, setQ] = useState("")
+  const [q, setQ] = useState("");
 
   return (
     <header className="lg:-mx-7 sticky top-0 z-30 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border mb-6 rounded-xl lg:rounded-none">
@@ -65,7 +65,9 @@ export function Topbar({ onMenuClick }: TopbarProps) {
               <DropdownMenuItem>Front door locked</DropdownMenuItem>
               <DropdownMenuItem>HVAC filter reminder</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-muted-foreground">View all</DropdownMenuItem>
+              <DropdownMenuItem className="text-muted-foreground">
+                View all
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -112,11 +114,13 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                 <a href="/devices">My devices</a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">Sign out</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">
+                Sign out
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
     </header>
-  )
+  );
 }
