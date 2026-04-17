@@ -37,7 +37,31 @@ func main() {
 
 	// CORS middleware
 	r.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		origin := c.Request.Header.Get("Origin")
+
+		// Allow specific origins for development
+		allowedOrigins := []string{
+			"http://localhost:3000", // frontend
+			"http://localhost:3001", // dashboard
+			"http://localhost:3002", // any other dev port
+			"http://127.0.0.1:3000",
+			"http://127.0.0.1:3001",
+			"http://127.0.0.1:3002",
+		}
+
+		// Check if origin is allowed
+		allowOrigin := false
+		for _, allowed := range allowedOrigins {
+			if origin == allowed {
+				allowOrigin = true
+				break
+			}
+		}
+
+		if allowOrigin {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+		}
+
 		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")

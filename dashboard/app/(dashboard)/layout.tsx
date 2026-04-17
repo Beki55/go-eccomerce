@@ -1,23 +1,48 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Sidebar } from "@/components/sidebar"
-import { Topbar } from "@/components/topbar"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { Sidebar } from "@/components/sidebar";
+import { Topbar } from "@/components/topbar";
 
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push("/signin");
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="bg-background">
       <div className="mx-auto  px-2 py-3 sm:px-4 sm:py-6">
         <div className="rounded-3xl bg-card shadow-sm ring-1 ring-border overflow-hidden">
           {sidebarOpen && (
-            <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
+            <div
+              className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
           )}
 
           <div className="flex h-[95vh]">
@@ -34,11 +59,18 @@ export default function DashboardLayout({
             <main className="flex-1 w-full lg:w-auto rounded-b-3xl lg:rounded-r-3xl lg:rounded-bl-none bg-muted p-3 sm:p-5 md:px-7 md:py-7 xl:pb-7 xl:pt-0 overflow-auto">
               <Topbar onMenuClick={() => setSidebarOpen(true)} />
               {children}
-<p className="mt-2 bottom-0">© All rights reserved by <a href="https://codescandy.com/">CodesCandy</a>. Distributed by: <a href="https://themewagon.com" target="_blank">ThemeWagon</a></p>
+              <p className="mt-2 bottom-0">
+                © All rights reserved by{" "}
+                <a href="https://codescandy.com/">CodesCandy</a>. Distributed
+                by:{" "}
+                <a href="https://themewagon.com" target="_blank">
+                  ThemeWagon
+                </a>
+              </p>
             </main>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

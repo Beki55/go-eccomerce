@@ -5,6 +5,8 @@ import { GeistMono } from "geist/font/mono";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/lib/auth-context";
+import { Toaster } from "@/components/ui/sonner";
 import { Suspense } from "react";
 
 export const metadata: Metadata = {
@@ -35,10 +37,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Suspense fallback={null}>
-            {children}
-            <Analytics />
-          </Suspense>
+          <AuthProvider>
+            <Suspense fallback={null}>
+              {children}
+              <Analytics />
+            </Suspense>
+            <Toaster />
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

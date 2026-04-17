@@ -1,7 +1,8 @@
 "use client";
 
-import { Bell, Search, Settings, User, Menu } from "lucide-react";
+import { Bell, Search, Settings, User, Menu, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/lib/auth-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +19,7 @@ interface TopbarProps {
 }
 
 export function Topbar({ onMenuClick }: TopbarProps) {
+  const { user, logout } = useAuth();
   const [q, setQ] = useState("");
 
   return (
@@ -104,7 +106,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="flex items-center gap-2">
                 <User className="size-4" />
-                Signed in as Jennifer
+                Signed in as {user?.name || "Admin"}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
@@ -114,7 +116,8 @@ export function Topbar({ onMenuClick }: TopbarProps) {
                 <a href="/devices">My devices</a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive">
+              <DropdownMenuItem className="text-destructive" onClick={logout}>
+                <LogOut className="size-4 mr-2" />
                 Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
