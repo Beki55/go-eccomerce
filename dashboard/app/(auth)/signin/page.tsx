@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { LoadingPage } from "@/components/ui/loading";
 
 export default function SignInPage() {
   const { login, user, loading } = useAuth();
@@ -29,11 +30,7 @@ export default function SignInPage() {
   }, [user, loading, router]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
-    );
+    return <LoadingPage message="Checking authentication..." />;
   }
 
   if (user) {

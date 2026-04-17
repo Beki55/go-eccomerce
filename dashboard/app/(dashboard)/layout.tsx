@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Sidebar } from "@/components/sidebar";
 import { Topbar } from "@/components/topbar";
+import { LoadingPage } from "@/components/ui/loading";
 
 export default function DashboardLayout({
   children,
@@ -23,11 +24,7 @@ export default function DashboardLayout({
   }, [user, loading, router]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900"></div>
-      </div>
-    );
+    return <LoadingPage message="Loading dashboard..." />;
   }
 
   if (!user) {

@@ -1,6 +1,17 @@
-"use client"
+"use client";
 
-import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts"
+import {
+  BarChart,
+  Bar,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import { Suspense } from "react";
+import { LoadingCard } from "@/components/ui/loading";
 
 const data = [
   { month: "Feb", water: 60, gas: 40, electricity: 30 },
@@ -11,13 +22,17 @@ const data = [
   { month: "Jul", water: 72, gas: 95, electricity: 50 },
   { month: "Aug", water: 65, gas: 70, electricity: 42 },
   { month: "Sep", water: 66, gas: 65, electricity: 40 },
-]
+];
 
-export default function StatisticsPage() {
+function StatisticsContent() {
   return (
     <section className="rounded-2xl bg-card p-6 md:p-8 shadow-sm ring-1 ring-border">
-      <h1 className="text-balance text-2xl font-semibold text-foreground">Statistics</h1>
-      <p className="mt-2 text-muted-foreground">Monthly consumption by utility.</p>
+      <h1 className="text-balance text-2xl font-semibold text-foreground">
+        Statistics
+      </h1>
+      <p className="mt-2 text-muted-foreground">
+        Monthly consumption by utility.
+      </p>
 
       <div className="mt-6 h-80 w-full rounded-xl bg-background p-4 ring-1 ring-border">
         <ResponsiveContainer width="100%" height="100%">
@@ -26,7 +41,10 @@ export default function StatisticsPage() {
             <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
             <YAxis stroke="hsl(var(--muted-foreground))" />
             <Tooltip
-              contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+              contentStyle={{
+                background: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+              }}
               labelStyle={{ color: "hsl(var(--foreground))" }}
             />
             <Legend />
@@ -37,5 +55,13 @@ export default function StatisticsPage() {
         </ResponsiveContainer>
       </div>
     </section>
-  )
+  );
+}
+
+export default function StatisticsPage() {
+  return (
+    <Suspense fallback={<LoadingCard message="Loading statistics..." />}>
+      <StatisticsContent />
+    </Suspense>
+  );
 }

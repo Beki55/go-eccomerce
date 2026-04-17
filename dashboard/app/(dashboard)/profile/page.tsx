@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { LoadingCard } from "@/components/ui/loading";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -11,11 +12,7 @@ export default function ProfilePage() {
   const [energySaving, setEnergySaving] = useState(false);
 
   if (!user) {
-    return (
-      <section className="rounded-2xl bg-card p-6 md:p-8 shadow-sm ring-1 ring-border">
-        <div className="text-center">Loading profile...</div>
-      </section>
-    );
+    return <LoadingCard message="Loading profile..." />;
   }
 
   return (

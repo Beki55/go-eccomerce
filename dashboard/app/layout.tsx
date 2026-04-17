@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { Suspense } from "react";
+import { LoadingPage } from "@/components/ui/loading";
 
 export const metadata: Metadata = {
   title: "BkShop | Dashboard",
@@ -38,7 +39,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <Suspense fallback={null}>
+            <Suspense
+              fallback={<LoadingPage message="Initializing dashboard..." />}
+            >
               {children}
               <Analytics />
             </Suspense>
