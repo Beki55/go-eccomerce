@@ -24,7 +24,8 @@ export default function NotFound() {
         </CardHeader>
         <CardContent className="space-y-6">
           <p className="text-muted-foreground">
-            Sorry, we couldn't find the page you're looking for. The page might have been moved, deleted, or you entered the wrong URL.
+            Sorry, we couldn't find the page you're looking for. The page might
+            have been moved, deleted, or you entered the wrong URL.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3">
