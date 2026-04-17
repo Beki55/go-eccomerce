@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { ColorThemePicker } from "@/components/color-theme"
 
 interface TopbarProps {
   onMenuClick?: () => void
@@ -88,10 +87,6 @@ export function Topbar({ onMenuClick }: TopbarProps) {
               <DropdownMenuSeparator />
               <div className="px-2 py-1.5">
                 <ThemeToggle />
-              </div>
-              {/* Brand color picker */}
-              <div className="px-2 pb-2">
-                <ColorThemePicker />
               </div>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -6,10 +6,9 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Suspense } from "react";
-import ButtonDownload from "@/components/button-download";
 
 export const metadata: Metadata = {
-  title: "Smart Home Dashboard",
+  title: "BkShop | Dashboard",
   description:
     "This is a modern, customizable smart home dashboard built with Next.js, React, and Tailwind CSS. It provides a beautiful interface to monitor and control smart home devices, view statistics, manage user profiles, and more.",
   generator: "Smart Home Dashboard",
@@ -38,7 +37,6 @@ export default function RootLayout({
         >
           <Suspense fallback={null}>
             {children}
-            <ButtonDownload />
             <Analytics />
           </Suspense>
         </ThemeProvider>
