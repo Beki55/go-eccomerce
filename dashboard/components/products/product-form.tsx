@@ -45,6 +45,7 @@ const formSchema = z.object({
     images: z.array(z.string()).default([]),
     is_active: z.boolean().default(true),
     is_featured: z.boolean().default(false),
+    is_in_production: z.boolean().default(false),
 });
 
 interface ProductFormProps {
@@ -80,6 +81,7 @@ export function ProductForm({ initialData }: ProductFormProps) {
                 images: [],
                 is_active: true,
                 is_featured: false,
+                is_in_production: false,
             },
     });
 
@@ -308,6 +310,21 @@ export function ProductForm({ initialData }: ProductFormProps) {
                                         <div>
                                             <FormLabel>Featured</FormLabel>
                                             <FormDescription>Show in featured products list</FormDescription>
+                                        </div>
+                                        <FormControl>
+                                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                                        </FormControl>
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="is_in_production"
+                                render={({ field }) => (
+                                    <FormItem className="flex items-center justify-between space-y-0">
+                                        <div>
+                                            <FormLabel>In Production</FormLabel>
+                                            <FormDescription>Product is currently in production</FormDescription>
                                         </div>
                                         <FormControl>
                                             <Switch checked={field.value} onCheckedChange={field.onChange} />

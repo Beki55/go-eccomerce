@@ -83,6 +83,7 @@ type Product struct {
 	IsActive          bool             `gorm:"default:true;index" json:"is_active"`
 	IsFeatured        bool             `gorm:"default:false" json:"is_featured"`
 	IsDigital         bool             `gorm:"default:false" json:"is_digital"`
+	IsInProduction    bool             `gorm:"default:false" json:"is_in_production"`
 	DownloadableFile  *string          `gorm:"type:varchar(500)" json:"downloadable_file,omitempty"`
 	MetaTitle         *string          `gorm:"type:varchar(200)" json:"meta_title,omitempty"`
 	MetaDescription   *string          `gorm:"type:text" json:"meta_description,omitempty"`

@@ -47,6 +47,7 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 		IsActive          bool             `json:"is_active"`
 		IsFeatured        bool             `json:"is_featured"`
 		IsDigital         bool             `json:"is_digital"`
+		IsInProduction    bool             `json:"is_in_production"`
 		DownloadableFile  *string          `json:"downloadable_file"`
 		MetaTitle         *string          `json:"meta_title"`
 		MetaDescription   *string          `json:"meta_description"`
@@ -86,6 +87,7 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 		IsActive:          req.IsActive,
 		IsFeatured:        req.IsFeatured,
 		IsDigital:         req.IsDigital,
+		IsInProduction:    req.IsInProduction,
 		DownloadableFile:  req.DownloadableFile,
 		MetaTitle:         req.MetaTitle,
 		MetaDescription:   req.MetaDescription,
@@ -186,6 +188,9 @@ func (h *ProductHandler) ListProducts(c *gin.Context) {
 	}
 	if isFeatured := c.Query("is_featured"); isFeatured != "" {
 		filters["is_featured"] = isFeatured == "true"
+	}
+	if isInProduction := c.Query("is_in_production"); isInProduction != "" {
+		filters["is_in_production"] = isInProduction == "true"
 	}
 	if search := c.Query("search"); search != "" {
 		filters["search"] = search

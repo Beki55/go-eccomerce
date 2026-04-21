@@ -128,19 +128,20 @@ export default function ProductsPage() {
                             <TableHead>Price</TableHead>
                             <TableHead>Stock</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead>Production</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loading ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">
+                                <TableCell colSpan={8} className="h-24 text-center">
                                     Loading...
                                 </TableCell>
                             </TableRow>
                         ) : products.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="h-24 text-center">
+                                <TableCell colSpan={8} className="h-24 text-center">
                                     No products found.
                                 </TableCell>
                             </TableRow>
@@ -176,6 +177,11 @@ export default function ProductsPage() {
                                     <TableCell>
                                         <Badge variant={product.is_active ? "default" : "secondary"}>
                                             {product.is_active ? "Active" : "Inactive"}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        <Badge variant={product.is_in_production ? "default" : "outline"}>
+                                            {product.is_in_production ? "In Production" : "Not in Production"}
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-right">

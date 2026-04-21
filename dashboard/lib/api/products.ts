@@ -28,6 +28,7 @@ export interface Product {
     low_stock_threshold: number;
     is_active: boolean;
     is_featured: boolean;
+    is_in_production: boolean;
     category_id?: string;
     brand_id?: string;
     images?: string[];

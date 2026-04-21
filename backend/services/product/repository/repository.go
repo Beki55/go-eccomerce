@@ -133,6 +133,9 @@ func (r *productRepository) List(ctx context.Context, limit, offset int, filters
 	if isFeatured, ok := filters["is_featured"].(bool); ok {
 		query = query.Where("is_featured = ?", isFeatured)
 	}
+	if isInProduction, ok := filters["is_in_production"].(bool); ok {
+		query = query.Where("is_in_production = ?", isInProduction)
+	}
 	if search, ok := filters["search"].(string); ok && search != "" {
 		query = query.Where("name ILIKE ? OR description ILIKE ?", "%"+search+"%", "%"+search+"%")
 	}
