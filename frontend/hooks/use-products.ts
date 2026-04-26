@@ -43,7 +43,9 @@ export function useProductsByCategory(category: string) {
   return useQuery({
     queryKey: [...queryKeys.products, "category", category],
     queryFn: async (): Promise<Product[]> => {
-      const response = await axios.get(`${API_BASE_URL}/api/products/category/${category}`);
+      const response = await axios.get(
+        `${API_BASE_URL}/api/products/category/${category}`,
+      );
       return response.data;
     },
     enabled: !!category,
@@ -56,7 +58,10 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: async (product: Omit<Product, "id">): Promise<Product> => {
-      const response = await axios.post(`${API_BASE_URL}/api/products`, product);
+      const response = await axios.post(
+        `${API_BASE_URL}/api/products`,
+        product,
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -71,7 +76,10 @@ export function useUpdateProduct() {
 
   return useMutation({
     mutationFn: async ({ id, ...product }: Product): Promise<Product> => {
-      const response = await axios.put(`${API_BASE_URL}/api/products/${id}`, product);
+      const response = await axios.put(
+        `${API_BASE_URL}/api/products/${id}`,
+        product,
+      );
       return response.data;
     },
     onSuccess: (data) => {

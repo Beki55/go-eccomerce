@@ -36,11 +36,17 @@ export function useLogin() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ email, password }: { email: string; password: string }): Promise<User> => {
+    mutationFn: async ({
+      email,
+      password,
+    }: {
+      email: string;
+      password: string;
+    }): Promise<User> => {
       const response = await axios.post(
         `${API_BASE_URL}/auth/login`,
         { email, password },
-        { withCredentials: true }
+        { withCredentials: true },
       );
       return response.data;
     },
@@ -58,7 +64,7 @@ export function useRegister() {
     mutationFn: async ({
       name,
       email,
-      password
+      password,
     }: {
       name: string;
       email: string;
@@ -67,7 +73,7 @@ export function useRegister() {
       const response = await axios.post(
         `${API_BASE_URL}/auth/register`,
         { name, email, password },
-        { withCredentials: true }
+        { withCredentials: true },
       );
       return response.data;
     },
@@ -88,7 +94,7 @@ export function useGoogleLogin() {
       const response = await axios.post(
         `${API_BASE_URL}/auth/google`,
         { id_token: idToken },
-        { withCredentials: true }
+        { withCredentials: true },
       );
       return response.data;
     },
@@ -104,7 +110,11 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async (): Promise<void> => {
-      await axios.post(`${API_BASE_URL}/auth/logout`, {}, { withCredentials: true });
+      await axios.post(
+        `${API_BASE_URL}/auth/logout`,
+        {},
+        { withCredentials: true },
+      );
       await fbSignOut(auth);
     },
     onSuccess: () => {

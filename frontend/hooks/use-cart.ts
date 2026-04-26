@@ -43,11 +43,22 @@ export function useAddToCart() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userId, productId, quantity }: { userId: string; productId: string; quantity: number }) => {
-      const response = await axios.post(`${API_BASE_URL}/api/cart/${userId}/items`, {
-        productId,
-        quantity,
-      });
+    mutationFn: async ({
+      userId,
+      productId,
+      quantity,
+    }: {
+      userId: string;
+      productId: string;
+      quantity: number;
+    }) => {
+      const response = await axios.post(
+        `${API_BASE_URL}/api/cart/${userId}/items`,
+        {
+          productId,
+          quantity,
+        },
+      );
       return response.data;
     },
     onSuccess: (_, { userId }) => {
@@ -64,15 +75,18 @@ export function useUpdateCartItem() {
     mutationFn: async ({
       userId,
       itemId,
-      quantity
+      quantity,
     }: {
       userId: string;
       itemId: string;
       quantity: number;
     }) => {
-      const response = await axios.put(`${API_BASE_URL}/api/cart/${userId}/items/${itemId}`, {
-        quantity,
-      });
+      const response = await axios.put(
+        `${API_BASE_URL}/api/cart/${userId}/items/${itemId}`,
+        {
+          quantity,
+        },
+      );
       return response.data;
     },
     onSuccess: (_, { userId }) => {
@@ -86,7 +100,13 @@ export function useRemoveFromCart() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ userId, itemId }: { userId: string; itemId: string }) => {
+    mutationFn: async ({
+      userId,
+      itemId,
+    }: {
+      userId: string;
+      itemId: string;
+    }) => {
       await axios.delete(`${API_BASE_URL}/api/cart/${userId}/items/${itemId}`);
     },
     onSuccess: (_, { userId }) => {

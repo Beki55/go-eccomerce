@@ -46,7 +46,7 @@ const categoryImages = [
 ];
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   // useEffect(() => {

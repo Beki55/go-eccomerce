@@ -100,7 +100,7 @@ const navItems = [
 ];
 
 export default function AccountPage() {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
   const [wishlist, setWishlist] = useState(mockWishlist);
@@ -108,13 +108,13 @@ export default function AccountPage() {
 
   // Redirect if not authenticated
   useEffect(() => {
-    if (!loading && !user) {
+    if (!isLoading && !user) {
       router.push("/auth");
     }
-  }, [user, loading, router]);
+  }, [user, isLoading, router]);
 
   // Show loading
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>

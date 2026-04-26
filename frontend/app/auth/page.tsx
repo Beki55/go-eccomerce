@@ -19,9 +19,9 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 export default function AuthPage() {
-  const { login, register, googleLogin, user, loading } = useAuth();
+  const { login, register, googleLogin, user, isLoading } = useAuth();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingLocal, setIsLoadingLocal] = useState(false);
 
   // Form states - must be declared before any conditional returns
   const [loginData, setLoginData] = useState({ email: "", password: "" });
@@ -33,13 +33,13 @@ export default function AuthPage() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (!loading && user) {
+    if (!isLoading && user) {
       router.push("/");
     }
-  }, [user, loading, router]);
+  }, [user, isLoading, router]);
 
   // Show loading while checking auth
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-950">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 dark:border-white"></div>
@@ -54,7 +54,7 @@ export default function AuthPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsLoadingLocal(true);
     try {
       await login(loginData.email, loginData.password);
       toast.success("Logged in successfully!");
@@ -62,13 +62,13 @@ export default function AuthPage() {
       console.error(error);
       toast.error(error.response?.data?.error || "Login failed");
     } finally {
-      setIsLoading(false);
+      setIsLoadingLocal(false);
     }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsLoadingLocal(true);
     try {
       await register(
         registerData.name,
@@ -80,12 +80,12 @@ export default function AuthPage() {
       console.error(error);
       toast.error(error.response?.data?.error || "Registration failed");
     } finally {
-      setIsLoading(false);
+      setIsLoadingLocal(false);
     }
   };
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
+    setIsLoadingLocal(true);
     try {
       await googleLogin();
       toast.success("Logged in with Google!");
@@ -93,7 +93,7 @@ export default function AuthPage() {
       console.error(error);
       toast.error("Google login failed");
     } finally {
-      setIsLoading(false);
+      setIsLoadingLocal(false);
     }
   };
 
