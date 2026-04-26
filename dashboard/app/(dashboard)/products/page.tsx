@@ -36,7 +36,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { useProducts, useDeleteProduct, useUpdateStock } from "@/hooks/use-products";
+import {
+  useProducts,
+  useDeleteProduct,
+  useUpdateStock,
+} from "@/hooks/use-products";
 
 export default function ProductsPage() {
   const [search, setSearch] = useState("");
@@ -45,7 +49,11 @@ export default function ProductsPage() {
   const [stockQuantity, setStockQuantity] = useState(0);
   const [stockReason, setStockReason] = useState("Restock");
 
-  const { data: productsData, isLoading } = useProducts({ search: search || undefined });
+  const {
+    data: productsData,
+    isLoading,
+    error,
+  } = useProducts({ search: search || undefined });
   const deleteProductMutation = useDeleteProduct();
   const updateStockMutation = useUpdateStock();
 
@@ -123,6 +131,15 @@ export default function ProductsPage() {
               <TableRow>
                 <TableCell colSpan={8} className="h-24 text-center">
                   Loading...
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={8}
+                  className="h-24 text-center text-red-500"
+                >
+                  Error loading products: {error.message}
                 </TableCell>
               </TableRow>
             ) : products.length === 0 ? (

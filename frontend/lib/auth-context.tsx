@@ -1,7 +1,13 @@
 "use client";
 
 import React, { createContext, useContext } from "react";
-import { useUser, useLogin, useRegister, useGoogleLogin, useLogout } from "@/hooks/use-auth";
+import {
+  useUser,
+  useLogin,
+  useRegister,
+  useGoogleLogin,
+  useLogout,
+} from "@/hooks/use-auth";
 
 interface User {
   id: string;
@@ -54,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         register,
         googleLogin,
-        logout
+        logout,
       }}
     >
       {children}

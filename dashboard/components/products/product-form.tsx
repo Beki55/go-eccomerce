@@ -30,6 +30,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { useCategories, useBrands, useCreateProduct, useUpdateProduct } from "@/hooks/use-products";
 import { ImageUpload } from "./image-upload";
+import { Product } from "@/lib/api/products";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),

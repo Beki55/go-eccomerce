@@ -6,7 +6,8 @@ import { toast } from "sonner";
 export const productKeys = {
   all: ["products"] as const,
   lists: () => [...productKeys.all, "list"] as const,
-  list: (filters: Record<string, any>) => [...productKeys.lists(), filters] as const,
+  list: (filters: Record<string, any>) =>
+    [...productKeys.lists(), filters] as const,
   details: () => [...productKeys.all, "detail"] as const,
   detail: (id: string) => [...productKeys.details(), id] as const,
   categories: () => [...productKeys.all, "categories"] as const,
@@ -18,9 +19,9 @@ export function useProducts(filters?: Record<string, any>) {
   return useQuery({
     queryKey: productKeys.list(filters || {}),
     queryFn: async () => {
-      const { data, error } = await productApi.listProducts(filters);
-      if (error) throw new Error(error);
-      return data;
+      const response = await productApi.listProducts(filters);
+      if (response.error) throw new Error(response.error);
+      return response.data;
     },
   });
 }
@@ -29,9 +30,9 @@ export function useProduct(id: string) {
   return useQuery({
     queryKey: productKeys.detail(id),
     queryFn: async () => {
-      const { data, error } = await productApi.getProduct(id);
-      if (error) throw new Error(error);
-      return data;
+      const response = await productApi.getProduct(id);
+      if (response.error) throw new Error(response.error);
+      return response.data;
     },
     enabled: !!id,
   });
@@ -42,9 +43,9 @@ export function useCreateProduct() {
 
   return useMutation({
     mutationFn: async (data: any) => {
-      const { data: product, error } = await productApi.createProduct(data);
-      if (error) throw new Error(error);
-      return product;
+      const response = await productApi.createProduct(data);
+      if (response.error) throw new Error(response.error);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
@@ -61,9 +62,9 @@ export function useUpdateProduct() {
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: any }) => {
-      const { data: product, error } = await productApi.updateProduct(id, data);
-      if (error) throw new Error(error);
-      return product;
+      const response = await productApi.updateProduct(id, data);
+      if (response.error) throw new Error(response.error);
+      return response.data;
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
@@ -81,8 +82,8 @@ export function useDeleteProduct() {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await productApi.deleteProduct(id);
-      if (error) throw new Error(error);
+      const response = await productApi.deleteProduct(id);
+      if (response.error) throw new Error(response.error);
       return id;
     },
     onSuccess: (id) => {
@@ -100,9 +101,15 @@ export function useUpdateStock() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: { quantity: number; reason: string } }) => {
-      const { error } = await productApi.updateStock(id, data);
-      if (error) throw new Error(error);
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { quantity: number; reason: string };
+    }) => {
+      const response = await productApi.updateStock(id, data);
+      if (response.error) throw new Error(response.error);
       return { id, ...data };
     },
     onSuccess: () => {
@@ -120,9 +127,9 @@ export function useCategories() {
   return useQuery({
     queryKey: productKeys.categories(),
     queryFn: async () => {
-      const { data, error } = await productApi.listCategories();
-      if (error) throw new Error(error);
-      return data;
+      const response = await productApi.listCategories();
+      if (response.error) throw new Error(response.error);
+      return response.data;
     },
   });
 }
@@ -206,9 +213,9 @@ export function useBrands() {
   return useQuery({
     queryKey: productKeys.brands(),
     queryFn: async () => {
-      const { data, error } = await productApi.listBrands();
-      if (error) throw new Error(error);
-      return data;
+      const response = await productApi.listBrands();
+      if (response.error) throw new Error(response.error);
+      return response.data;
     },
   });
 }
