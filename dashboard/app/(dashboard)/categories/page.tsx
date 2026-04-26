@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Plus, Search, MoreVertical, Edit, Trash2, Folder } from "lucide-react";
-import { productApi, Category } from "@/lib/api/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,7 +19,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
 import {
     Dialog,
     DialogContent,
@@ -31,47 +29,41 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useCategories, useCreateCategory, useUpdateCategory, useDeleteCategory } from "@/hooks/use-products";
 
 export default function CategoriesPage() {
-    const [categories, setCategories] = useState<Category[]>([]);
-    const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
-    const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+    const [editingCategory, setEditingCategory] = useState<any | null>(null);
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
 
-    const fetchCategories = async () => {
-        setLoading(true);
-        const { data, error } = await productApi.listCategories();
-        if (error) {
-            toast.error(error);
-        } else {
-            setCategories(data || []);
-        }
-        setLoading(false);
-    };
+    const { data: categories = [], isLoading } = useCategories();
+    const createCategoryMutation = useCreateCategory();
+    const updateCategoryMutation = useUpdateCategory();
+    const deleteCategoryMutation = useDeleteCategory();
 
-    useEffect(() => {
-        fetchCategories();
-    }, []);
-
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
         if (!name) return;
-        try {
-            if (editingCategory) {
-                const { error } = await productApi.updateCategory(editingCategory.id, { name, slug });
-                if (error) throw new Error(error);
-                toast.success("Category updated");
-            } else {
-                const { error } = await productApi.createCategory({ name, slug });
-                if (error) throw new Error(error);
-                toast.success("Category created");
-            }
-            setIsOpen(false);
-            resetForm();
-            fetchCategories();
-        } catch (error: any) {
-            toast.error(error.message);
+        if (editingCategory) {
+            updateCategoryMutation.mutate(
+                { id: editingCategory.id, data: { name, slug } },
+                {
+                    onSuccess: () => {
+                        setIsOpen(false);
+                        resetForm();
+                    },
+                }
+            );
+        } else {
+            createCategoryMutation.mutate(
+                { name, slug },
+                {
+                    onSuccess: () => {
+                        setIsOpen(false);
+                        resetForm();
+                    },
+                }
+            );
         }
     };
 
@@ -81,21 +73,16 @@ export default function CategoriesPage() {
         setSlug("");
     };
 
-    const handleEdit = (category: Category) => {
+    const handleEdit = (category: any) => {
         setEditingCategory(category);
         setName(category.name);
         setSlug(category.slug);
         setIsOpen(true);
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = (id: string) => {
         if (confirm("Delete this category?")) {
-            const { error } = await productApi.deleteCategory(id);
-            if (error) toast.error(error);
-            else {
-                toast.success("Category deleted");
-                fetchCategories();
-            }
+            deleteCategoryMutation.mutate(id);
         }
     };
 
@@ -147,9 +134,13 @@ export default function CategoriesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {loading ? (
+                        {isLoading ? (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center">Loading...</TableCell>
+                            </TableRow>
+                        ) : categories.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">No categories found.</TableCell>
                             </TableRow>
                         ) : categories.map((cat) => (
                             <TableRow key={cat.id}>

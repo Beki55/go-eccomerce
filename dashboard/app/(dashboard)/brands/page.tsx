@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Plus, Search, MoreVertical, Edit, Trash2, Tag } from "lucide-react";
-import { productApi, Brand } from "@/lib/api/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -20,7 +19,6 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
 import {
     Dialog,
     DialogContent,
@@ -31,47 +29,41 @@ import {
     DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useBrands, useCreateBrand, useUpdateBrand, useDeleteBrand } from "@/hooks/use-products";
 
 export default function BrandsPage() {
-    const [brands, setBrands] = useState<Brand[]>([]);
-    const [loading, setLoading] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
-    const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
+    const [editingBrand, setEditingBrand] = useState<any | null>(null);
     const [name, setName] = useState("");
     const [slug, setSlug] = useState("");
 
-    const fetchBrands = async () => {
-        setLoading(true);
-        const { data, error } = await productApi.listBrands();
-        if (error) {
-            toast.error(error);
-        } else {
-            setBrands(data || []);
-        }
-        setLoading(false);
-    };
+    const { data: brands = [], isLoading } = useBrands();
+    const createBrandMutation = useCreateBrand();
+    const updateBrandMutation = useUpdateBrand();
+    const deleteBrandMutation = useDeleteBrand();
 
-    useEffect(() => {
-        fetchBrands();
-    }, []);
-
-    const handleSubmit = async () => {
+    const handleSubmit = () => {
         if (!name) return;
-        try {
-            if (editingBrand) {
-                const { error } = await productApi.updateBrand(editingBrand.id, { name, slug });
-                if (error) throw new Error(error);
-                toast.success("Brand updated");
-            } else {
-                const { error } = await productApi.createBrand({ name, slug });
-                if (error) throw new Error(error);
-                toast.success("Brand created");
-            }
-            setIsOpen(false);
-            resetForm();
-            fetchBrands();
-        } catch (error: any) {
-            toast.error(error.message);
+        if (editingBrand) {
+            updateBrandMutation.mutate(
+                { id: editingBrand.id, data: { name, slug } },
+                {
+                    onSuccess: () => {
+                        setIsOpen(false);
+                        resetForm();
+                    },
+                }
+            );
+        } else {
+            createBrandMutation.mutate(
+                { name, slug },
+                {
+                    onSuccess: () => {
+                        setIsOpen(false);
+                        resetForm();
+                    },
+                }
+            );
         }
     };
 
@@ -81,21 +73,16 @@ export default function BrandsPage() {
         setSlug("");
     };
 
-    const handleEdit = (brand: Brand) => {
+    const handleEdit = (brand: any) => {
         setEditingBrand(brand);
         setName(brand.name);
         setSlug(brand.slug);
         setIsOpen(true);
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = (id: string) => {
         if (confirm("Delete this brand?")) {
-            const { error } = await productApi.deleteBrand(id);
-            if (error) toast.error(error);
-            else {
-                toast.success("Brand deleted");
-                fetchBrands();
-            }
+            deleteBrandMutation.mutate(id);
         }
     };
 
@@ -147,9 +134,13 @@ export default function BrandsPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {loading ? (
+                        {isLoading ? (
                             <TableRow>
                                 <TableCell colSpan={4} className="h-24 text-center">Loading...</TableCell>
+                            </TableRow>
+                        ) : brands.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={4} className="h-24 text-center">No brands found.</TableCell>
                             </TableRow>
                         ) : brands.map((brand) => (
                             <TableRow key={brand.id}>

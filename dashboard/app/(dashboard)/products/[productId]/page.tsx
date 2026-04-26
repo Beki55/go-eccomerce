@@ -1,49 +1,41 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { ProductForm } from "@/components/products/product-form";
-import { productApi, Product } from "@/lib/api/products";
+import { useProduct } from "@/hooks/use-products";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 export default function EditProductPage() {
     const params = useParams();
     const productId = params.productId as string;
-    const [product, setProduct] = useState<Product | null>(null);
-    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchProduct = async () => {
-            const { data, error } = await productApi.getProduct(productId);
-            if (error) {
-                toast.error(error);
-            } else if (data) {
-                setProduct(data);
-            }
-            setLoading(false);
-        };
+  const { data: product, isLoading, error } = useProduct(productId);
 
-        if (productId) {
-            fetchProduct();
-        }
-    }, [productId]);
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
-    if (loading) {
-        return (
-            <div className="h-full flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-        );
-    }
+  if (error) {
+    toast.error("Failed to load product");
+    return (
+      <div className="h-full flex items-center justify-center">
+        <p className="text-muted-foreground">Failed to load product.</p>
+      </div>
+    );
+  }
 
-    if (!product) {
-        return (
-            <div className="h-full flex items-center justify-center">
-                <p className="text-muted-foreground">Product not found.</p>
-            </div>
-        );
-    }
+  if (!product) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <p className="text-muted-foreground">Product not found.</p>
+      </div>
+    );
+  }
 
     return (
         <div className="space-y-6">

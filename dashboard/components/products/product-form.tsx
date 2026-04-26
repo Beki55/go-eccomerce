@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { productApi, Product, Category, Brand } from "@/lib/api/products";
+import { useCategories, useBrands, useCreateProduct, useUpdateProduct } from "@/hooks/use-products";
 import { ImageUpload } from "./image-upload";
 
 const formSchema = z.object({
@@ -55,8 +55,11 @@ interface ProductFormProps {
 export function ProductForm({ initialData }: ProductFormProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [brands, setBrands] = useState<Brand[]>([]);
+
+  const { data: categories = [] } = useCategories();
+  const { data: brands = [] } = useBrands();
+  const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -86,18 +89,6 @@ export function ProductForm({ initialData }: ProductFormProps) {
   });
 
   useEffect(() => {
-    const fetchData = async () => {
-      const [catRes, brandRes] = await Promise.all([
-        productApi.listCategories(),
-        productApi.listBrands(),
-      ]);
-      if (catRes.data) setCategories(catRes.data);
-      if (brandRes.data) setBrands(brandRes.data);
-    };
-    fetchData();
-  }, []);
-
-  useEffect(() => {
     if (initialData) {
       form.reset({
         ...initialData,
@@ -112,19 +103,23 @@ export function ProductForm({ initialData }: ProductFormProps) {
     try {
       setLoading(true);
       if (initialData) {
-        const { error } = await productApi.updateProduct(
-          initialData.id,
-          values,
+        updateProductMutation.mutate(
+          { id: initialData.id, data: values },
+          {
+            onSuccess: () => {
+              router.push("/products");
+              router.refresh();
+            },
+          }
         );
-        if (error) throw new Error(error);
-        toast.success("Product updated successfully");
       } else {
-        const { error } = await productApi.createProduct(values);
-        if (error) throw new Error(error);
-        toast.success("Product created successfully");
+        createProductMutation.mutate(values, {
+          onSuccess: () => {
+            router.push("/products");
+            router.refresh();
+          },
+        });
       }
-      router.push("/products");
-      router.refresh();
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     } finally {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import {
   Plus,
@@ -8,10 +8,8 @@ import {
   MoreVertical,
   Edit,
   Trash2,
-  Eye,
   Package,
 } from "lucide-react";
-import { productApi, Product } from "@/lib/api/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,7 +27,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -39,61 +36,42 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { useProducts, useDeleteProduct, useUpdateStock } from "@/hooks/use-products";
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [stockDialogOpen, setStockDialogOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [stockQuantity, setStockQuantity] = useState(0);
   const [stockReason, setStockReason] = useState("Restock");
 
-  const openStockDialog = (product: Product) => {
+  const { data: productsData, isLoading } = useProducts({ search: search || undefined });
+  const deleteProductMutation = useDeleteProduct();
+  const updateStockMutation = useUpdateStock();
+
+  const products = productsData?.products || [];
+
+  const openStockDialog = (product: any) => {
     setSelectedProduct(product);
     setStockQuantity(0);
     setStockDialogOpen(true);
   };
 
-  const handleUpdateStock = async () => {
+  const handleUpdateStock = () => {
     if (!selectedProduct) return;
-    const { error } = await productApi.updateStock(selectedProduct.id, {
-      quantity: stockQuantity,
-      reason: stockReason,
+    updateStockMutation.mutate({
+      id: selectedProduct.id,
+      data: {
+        quantity: stockQuantity,
+        reason: stockReason,
+      },
     });
-    if (error) {
-      toast.error(error);
-    } else {
-      toast.success("Stock updated");
-      setStockDialogOpen(false);
-      fetchProducts();
-    }
+    setStockDialogOpen(false);
   };
 
-  const fetchProducts = async () => {
-    setLoading(true);
-    const { data, error } = await productApi.listProducts({ search });
-    if (error) {
-      toast.error(error);
-    } else {
-      setProducts(data.products || []);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchProducts();
-  }, [search]);
-
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (confirm("Are you sure you want to delete this product?")) {
-      const { error } = await productApi.deleteProduct(id);
-      if (error) {
-        toast.error(error);
-      } else {
-        toast.success("Product deleted successfully");
-        fetchProducts();
-      }
+      deleteProductMutation.mutate(id);
     }
   };
 
@@ -141,7 +119,7 @@ export default function ProductsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
+            {isLoading ? (
               <TableRow>
                 <TableCell colSpan={8} className="h-24 text-center">
                   Loading...

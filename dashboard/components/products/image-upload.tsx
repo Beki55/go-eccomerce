@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Upload, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { productApi } from "@/lib/api/products";
+import { useUploadImages } from "@/hooks/use-products";
 import { toast } from "sonner";
 
 interface ImageUploadProps {
@@ -13,24 +13,18 @@ interface ImageUploadProps {
 }
 
 export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
-    const [loading, setLoading] = useState(false);
+    const uploadImagesMutation = useUploadImages();
 
     const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files) return;
 
-        setLoading(true);
         const fileArray = Array.from(files);
-
-        const { data, error } = await productApi.uploadImages(fileArray);
-
-        if (error) {
-            toast.error(error);
-        } else if (data) {
-            onChange([...value, ...data.urls]);
-            toast.success("Images uploaded successfully");
-        }
-        setLoading(false);
+        uploadImagesMutation.mutate(fileArray, {
+            onSuccess: (data) => {
+                onChange([...value, ...data.urls]);
+            },
+        });
     };
 
     return (
@@ -54,7 +48,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
             <div>
                 <label className="cursor-pointer">
                     <div className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg hover:bg-muted/50 transition bg-muted/20 border-muted">
-                        {loading ? (
+                        {uploadImagesMutation.isPending ? (
                             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
                         ) : (
                             <>
@@ -68,7 +62,7 @@ export function ImageUpload({ value, onChange, onRemove }: ImageUploadProps) {
                         className="hidden"
                         multiple
                         accept="image/*"
-                        disabled={loading}
+                        disabled={uploadImagesMutation.isPending}
                         onChange={onUpload}
                     />
                 </label>

@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/lib/auth-context";
+import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { Suspense } from "react";
 import { LoadingPage } from "@/components/ui/loading";
@@ -39,13 +40,15 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <Suspense
-              fallback={<LoadingPage message="Initializing dashboard..." />}
-            >
-              {children}
-              <Analytics />
-            </Suspense>
-            <Toaster />
+            <QueryProvider>
+              <Suspense
+                fallback={<LoadingPage message="Initializing dashboard..." />}
+              >
+                {children}
+                <Analytics />
+              </Suspense>
+              <Toaster />
+            </QueryProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>
