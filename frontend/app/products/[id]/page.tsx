@@ -5,18 +5,21 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, notFound } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingBag, Share2, Shield, Truck, RotateCcw, ChevronLeft, Plus, Minus, Star } from 'lucide-react';
+import { Heart, ShoppingBag, Share2, Shield, Truck, RotateCcw, ChevronLeft, Plus, Minus, Star, Loader2 } from 'lucide-react';
 import GoldBackground from '@/components/ui/GoldBackground';
 import ProductCard from '@/components/ui/ProductCard';
 import StarRating from '@/components/ui/StarRating';
-import { getProductById, getRelatedProducts } from '@/lib/products';
 import { useCart } from '@/lib/cart-context';
+import { useProductDetail, useRelatedProducts } from '@/hooks/useProducts';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL'];
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const product = getProductById(id);
+
+  const { data: product, loading, error } = useProductDetail(id);
+  const { data: relatedProducts } = useRelatedProducts(id, 4);
+
   const { addItem, isInCart } = useCart();
 
   const [selectedImage, setSelectedImage] = useState(0);
@@ -26,11 +29,19 @@ export default function ProductDetailPage() {
   const [addedToCart, setAddedToCart] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
 
-  if (!product) return notFound();
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-20 flex items-center justify-center">
+        <GoldBackground />
+        <Loader2 className="w-10 h-10 animate-spin text-[#D4AF37]" />
+      </div>
+    );
+  }
 
-  const relatedProducts = getRelatedProducts(product, 4);
+  if (error || !product) return notFound();
 
   const handleAddToCart = () => {
+    if (!product) return;
     addItem(product, quantity, selectedSize);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2500);
@@ -290,9 +301,8 @@ export default function ProductDetailPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 font-sans text-sm tracking-wider transition-all duration-300 relative ${
-                  activeTab === tab.id ? 'text-[#D4AF37]' : 'text-muted-foreground hover:text-[#D4AF37]'
-                }`}
+                className={`px-6 py-3 font-sans text-sm tracking-wider transition-all duration-300 relative ${activeTab === tab.id ? 'text-[#D4AF37]' : 'text-muted-foreground hover:text-[#D4AF37]'
+                  }`}
               >
                 {tab.label}
                 {activeTab === tab.id && (

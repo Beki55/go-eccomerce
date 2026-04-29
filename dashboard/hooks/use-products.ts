@@ -68,7 +68,9 @@ export function useUpdateProduct() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: productKeys.lists() });
-      queryClient.setQueryData(productKeys.detail(data.id), data);
+      if (data) {
+        queryClient.setQueryData(productKeys.detail(data.id), data);
+      }
       toast.success("Product updated successfully");
     },
     onError: (error: Error) => {
