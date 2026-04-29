@@ -1,9 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import { apiClient } from "@/lib/api";
 import { auth, googleProvider } from "@/lib/firebase";
 import { signInWithPopup, signOut as fbSignOut } from "firebase/auth";
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export interface User {
   id: string;
@@ -21,9 +19,7 @@ export function useUser() {
   return useQuery({
     queryKey: authQueryKeys.user,
     queryFn: async (): Promise<User> => {
-      const response = await axios.get(`${API_BASE_URL}/auth/me`, {
-        withCredentials: true,
-      });
+      const response = await apiClient.get("/auth/me");
       return response.data;
     },
     retry: false,
@@ -43,11 +39,7 @@ export function useLogin() {
       email: string;
       password: string;
     }): Promise<User> => {
-      const response = await axios.post(
-        `${API_BASE_URL}/auth/login`,
-        { email, password },
-        { withCredentials: true },
-      );
+      const response = await apiClient.post("/auth/login", { email, password });
       return response.data;
     },
     onSuccess: (user) => {
@@ -70,11 +62,11 @@ export function useRegister() {
       email: string;
       password: string;
     }): Promise<User> => {
-      const response = await axios.post(
-        `${API_BASE_URL}/auth/register`,
-        { name, email, password },
-        { withCredentials: true },
-      );
+      const response = await apiClient.post("/auth/register", {
+        name,
+        email,
+        password,
+      });
       return response.data;
     },
     onSuccess: (user) => {
@@ -91,11 +83,9 @@ export function useGoogleLogin() {
     mutationFn: async (): Promise<User> => {
       const result = await signInWithPopup(auth, googleProvider);
       const idToken = await result.user.getIdToken();
-      const response = await axios.post(
-        `${API_BASE_URL}/auth/google`,
-        { id_token: idToken },
-        { withCredentials: true },
-      );
+      const response = await apiClient.post("/auth/google", {
+        id_token: idToken,
+      });
       return response.data;
     },
     onSuccess: (user) => {
@@ -110,11 +100,7 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async (): Promise<void> => {
-      await axios.post(
-        `${API_BASE_URL}/auth/logout`,
-        {},
-        { withCredentials: true },
-      );
+      await apiClient.post("/auth/logout");
       await fbSignOut(auth);
     },
     onSuccess: () => {

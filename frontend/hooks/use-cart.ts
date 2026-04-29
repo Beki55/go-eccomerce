@@ -1,3 +1,4 @@
+import { apiClient } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
@@ -52,13 +53,10 @@ export function useAddToCart() {
       productId: string;
       quantity: number;
     }) => {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/cart/${userId}/items`,
-        {
-          productId,
-          quantity,
-        },
-      );
+      const response = await apiClient.post(`/cart/${userId}/items`, {
+        productId,
+        quantity,
+      });
       return response.data;
     },
     onSuccess: (_, { userId }) => {
@@ -81,12 +79,9 @@ export function useUpdateCartItem() {
       itemId: string;
       quantity: number;
     }) => {
-      const response = await axios.put(
-        `${API_BASE_URL}/api/cart/${userId}/items/${itemId}`,
-        {
-          quantity,
-        },
-      );
+      const response = await apiClient.put(`/cart/${userId}/items/${itemId}`, {
+        quantity,
+      });
       return response.data;
     },
     onSuccess: (_, { userId }) => {
@@ -107,7 +102,7 @@ export function useRemoveFromCart() {
       userId: string;
       itemId: string;
     }) => {
-      await axios.delete(`${API_BASE_URL}/api/cart/${userId}/items/${itemId}`);
+      await apiClient.delete(`/cart/${userId}/items/${itemId}`);
     },
     onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries({ queryKey: cartQueryKeys.cart(userId) });
@@ -121,7 +116,7 @@ export function useClearCart() {
 
   return useMutation({
     mutationFn: async (userId: string) => {
-      await axios.delete(`${API_BASE_URL}/api/cart/${userId}`);
+      await apiClient.delete(`/cart/${userId}`);
     },
     onSuccess: (_, userId) => {
       queryClient.invalidateQueries({ queryKey: cartQueryKeys.cart(userId) });

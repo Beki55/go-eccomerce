@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import GoldBackground from "@/components/ui/GoldBackground";
 import StarRating from "@/components/ui/StarRating";
-import { products } from "@/lib/products";
+import { Product } from "@/lib/products";
 import { useAuth } from "@/lib/auth-context";
 
 const mockOrders = [
@@ -34,7 +34,7 @@ const mockOrders = [
     status: "Delivered",
     items: 2,
     total: 1090,
-    product: products[0],
+    product: ({ id: "mock", name: "Mock Product", price: 0, images: ["/placeholder.jpg"], category: "Mock", subcategory: "Mock", description: "", inStock: true, rating: 5, reviewCount: 0, tags: [], features: [] } as Product),
   },
   {
     id: "LUXE-B7C1M4",
@@ -42,7 +42,7 @@ const mockOrders = [
     status: "In Transit",
     items: 1,
     total: 1290,
-    product: products[1],
+    product: ({ id: "mock", name: "Mock Product", price: 0, images: ["/placeholder.jpg"], category: "Mock", subcategory: "Mock", description: "", inStock: true, rating: 5, reviewCount: 0, tags: [], features: [] } as Product),
   },
   {
     id: "LUXE-D5E9N2",
@@ -50,11 +50,11 @@ const mockOrders = [
     status: "Processing",
     items: 3,
     total: 2420,
-    product: products[2],
+    product: ({ id: "mock", name: "Mock Product", price: 0, images: ["/placeholder.jpg"], category: "Mock", subcategory: "Mock", description: "", inStock: true, rating: 5, reviewCount: 0, tags: [], features: [] } as Product),
   },
 ];
 
-const mockWishlist = products.slice(3, 7);
+const mockWishlist: Product[] = [];
 
 const mockAddresses = [
   {
@@ -214,11 +214,10 @@ export default function AccountPage() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
-                      activeTab === item.id
-                        ? "text-[#D4AF37]"
-                        : "text-muted-foreground hover:text-[#D4AF37]"
-                    }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${activeTab === item.id
+                      ? "text-[#D4AF37]"
+                      : "text-muted-foreground hover:text-[#D4AF37]"
+                      }`}
                     style={{
                       background:
                         activeTab === item.id

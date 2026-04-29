@@ -89,16 +89,21 @@ export function useUpdateProduct() {
   });
 }
 
-// Mutation for deleting a product
-export function useDeleteProduct() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string): Promise<void> => {
-      await axios.delete(`${API_BASE_URL}/api/products/${id}`);
+// Fetch categories
+export function useCategories() {
+  return useQuery({
+    queryKey: queryKeys.categories,
+    queryFn: async (): Promise<
+      { id: string; name: string; count: number }[]
+    > => {
+      const backendCategories = await fetchCategories();
+      // For now, add a count property (could be fetched separately or calculated)
+      return backendCategories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        count: 0, // TODO: Fetch actual count from backend
+      }));
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.products });
-    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 }

@@ -1,224 +1,152 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
     fetchProducts,
     fetchFeaturedProducts,
     fetchCategories,
+    fetchProduct,
     mapBackendProduct,
     type ListProductsParams,
     type BackendCategory,
 } from '@/lib/api';
-import { type Product, products as staticProducts, categories as staticCategories } from '@/lib/products';
+import { type Product } from '@/lib/products';
+
+export const productFrontKeys = {
+  all: ['front-products'] as const,
+  lists: () => [...productFrontKeys.all, 'list'] as const,
+  list: (filters: ListProductsParams) => [...productFrontKeys.lists(), filters] as const,
+  details: () => [...productFrontKeys.all, 'detail'] as const,
+  detail: (id: string | undefined) => [...productFrontKeys.details(), id] as const,
+  categories: () => [...productFrontKeys.all, 'categories'] as const,
+  featured: (limit: number) => [...productFrontKeys.all, 'featured', limit] as const,
+  related: (id: string | undefined, limit: number) => [...productFrontKeys.all, 'related', id, limit] as const,
+};
 
 // ─── useFeaturedProducts ──────────────────────────────────────────────────────
 
 export function useFeaturedProducts(limit = 8) {
-    const [data, setData] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        async function load() {
-            try {
-                setLoading(true);
-                const res = await fetchFeaturedProducts(limit);
-                if (!cancelled) {
-                    if (res.products && res.products.length > 0) {
-                        setData(res.products.map(mapBackendProduct) as unknown as Product[]);
-                    } else {
-                        // Fallback to static data when DB is empty
-                        setData(staticProducts.slice(0, limit));
-                    }
-                    setError(null);
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    console.warn('Failed to fetch featured products from API, using static data.', err);
-                    setData(staticProducts.slice(0, limit));
-                    setError(null); // Don't propagate error – just use fallback
-                }
-            } finally {
-                if (!cancelled) setLoading(false);
+    const query = useQuery({
+        queryKey: productFrontKeys.featured(limit),
+        queryFn: async () => {
+            const res = await fetchFeaturedProducts(limit);
+            if (res.products && res.products.length > 0) {
+                return res.products.map(mapBackendProduct) as unknown as Product[];
             }
-        }
+            return [];
+        },
+    });
 
-        load();
-        return () => { cancelled = true; };
-    }, [limit]);
-
-    return { data, loading, error };
+    return { 
+        data: query.data || [], 
+        loading: query.isLoading, 
+        error: query.error ? query.error.message : null 
+    };
 }
 
 // ─── useProductList ───────────────────────────────────────────────────────────
 
 export function useProductList(params: ListProductsParams = {}) {
-    const [data, setData] = useState<Product[]>([]);
-    const [total, setTotal] = useState(0);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-
-    const key = JSON.stringify(params);
-
-    const load = useCallback(async () => {
-        try {
-            setLoading(true);
+    const query = useQuery({
+        queryKey: productFrontKeys.list(params),
+        queryFn: async () => {
             const res = await fetchProducts(params);
             if (res.products && res.products.length > 0) {
-                setData(res.products.map(mapBackendProduct) as unknown as Product[]);
-                setTotal(res.total);
-            } else {
-                setData(staticProducts);
-                setTotal(staticProducts.length);
+                return {
+                    data: res.products.map(mapBackendProduct) as unknown as Product[],
+                    total: res.total
+                };
             }
-            setError(null);
-        } catch (err) {
-            console.warn('Failed to fetch products from API, using static data.', err);
-            setData(staticProducts);
-            setTotal(staticProducts.length);
-            setError(null);
-        } finally {
-            setLoading(false);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [key]);
+            return { data: [], total: 0 };
+        },
+    });
 
-    useEffect(() => { load(); }, [load]);
-
-    return { data, total, loading, error, refetch: load };
+    return { 
+        data: query.data?.data || [], 
+        total: query.data?.total || 0,
+        loading: query.isLoading, 
+        error: query.error ? query.error.message : null, 
+        refetch: query.refetch 
+    };
 }
 
 // ─── useCategories ────────────────────────────────────────────────────────────
 
 export function useCategories() {
-    const [data, setData] = useState(staticCategories);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        async function load() {
-            try {
-                const cats: BackendCategory[] = await fetchCategories();
-                if (!cancelled && cats.length > 0) {
-                    const mapped = [
-                        { id: 'all', name: 'All Items', count: 0 },
-                        ...cats.map(c => ({ id: c.id, name: c.name, count: 0 })),
-                    ];
-                    setData(mapped);
-                }
-            } catch {
-                // silently fall back to static data
-            } finally {
-                if (!cancelled) setLoading(false);
+    const query = useQuery({
+        queryKey: productFrontKeys.categories(),
+        queryFn: async () => {
+            const cats: BackendCategory[] = await fetchCategories();
+            if (cats && cats.length > 0) {
+                const mapped = [
+                    { id: 'all', name: 'All Items', count: 0 },
+                    ...cats.map(c => ({ id: c.id, name: c.name, count: 0 })),
+                ];
+                return mapped;
             }
-        }
+            return [];
+        },
+    });
 
-        load();
-        return () => { cancelled = true; };
-    }, []);
-
-    return { data, loading };
+    return { 
+        data: query.data || [], 
+        loading: query.isLoading 
+    };
 }
 
 // ─── useProductDetail ─────────────────────────────────────────────────────────
 
 export function useProductDetail(id: string) {
-    const [data, setData] = useState<Product | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const query = useQuery({
+        queryKey: productFrontKeys.detail(id),
+        queryFn: async () => {
+            const p = await fetchProduct(id);
+            const mapped = mapBackendProduct(p) as unknown as Product;
+                
+            // Fallback handling to ensure required properties always exist
+            return {
+                ...mapped,
+                images: mapped.images?.length > 0 ? mapped.images : ['https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=800'],
+                tags: mapped.tags || [],
+                features: mapped.features || []
+            };
+        },
+        enabled: !!id,
+    });
 
-    useEffect(() => {
-        let cancelled = false;
-
-        async function load() {
-            try {
-                setLoading(true);
-                const { fetchProduct } = await import('@/lib/api');
-                const p = await fetchProduct(id);
-                if (!cancelled) {
-                    setData(mapBackendProduct(p) as unknown as Product);
-                    setError(null);
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    console.warn(`Failed to fetch product ${id} from API, using static data.`, err);
-                    const staticProduct = staticProducts.find(p => p.id === id);
-                    if (staticProduct) {
-                        setData(staticProduct);
-                        setError(null);
-                    } else {
-                        setError('Product not found');
-                        setData(null);
-                    }
-                }
-            } finally {
-                if (!cancelled) setLoading(false);
-            }
-        }
-
-        if (id) {
-            load();
-        }
-
-        return () => { cancelled = true; };
-    }, [id]);
-
-    return { data, loading, error };
+    return { 
+        data: query.data || null, 
+        loading: query.isLoading, 
+        error: query.error ? query.error.message : null 
+    };
 }
 
 // ─── useRelatedProducts ───────────────────────────────────────────────────────
 
 export function useRelatedProducts(productId: string, limit = 4) {
-    const [data, setData] = useState<Product[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        let cancelled = false;
-
-        async function load() {
-            try {
-                setLoading(true);
-                // Try fetching related products (if supported by your API)
-                // For now, fetch latest products excluding self
-                const { fetchProducts } = await import('@/lib/api');
-                const res = await fetchProducts({ limit: limit + 1 });
-                if (!cancelled) {
-                    if (res.products && res.products.length > 0) {
-                        const mapped = res.products.map(mapBackendProduct) as unknown as Product[];
-                        setData(mapped.filter(p => p.id !== productId).slice(0, limit));
-                    } else {
-                        // Fallback
-                        const { getRelatedProducts, getProductById } = await import('@/lib/products');
-                        const product = getProductById(productId);
-                        if (product) {
-                            setData(getRelatedProducts(product, limit));
-                        }
-                    }
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    const { getRelatedProducts, getProductById } = await import('@/lib/products');
-                    const product = getProductById(productId);
-                    if (product) {
-                        setData(getRelatedProducts(product, limit));
-                    } else {
-                        setData(staticProducts.slice(0, limit));
-                    }
-                }
-            } finally {
-                if (!cancelled) setLoading(false);
+    const query = useQuery({
+        queryKey: productFrontKeys.related(productId, limit),
+        queryFn: async () => {
+            const res = await fetchProducts({ limit: limit + 1 });
+            if (res.products && res.products.length > 0) {
+                const mapped = res.products.map(mapBackendProduct) as unknown as Product[];
+                const filtered = mapped.filter(p => p.id !== productId).slice(0, limit);
+                
+                // Secure arrays
+                return filtered.map(p => ({
+                    ...p,
+                    images: p.images?.length > 0 ? p.images : ['https://images.pexels.com/photos/1152077/pexels-photo-1152077.jpeg?auto=compress&cs=tinysrgb&w=800'],
+                    tags: p.tags || [],
+                    features: p.features || []
+                }));
             }
-        }
+            return [];
+        },
+        enabled: !!productId,
+    });
 
-        if (productId) {
-            load();
-        }
-
-        return () => { cancelled = true; };
-    }, [productId, limit]);
-
-    return { data, loading };
+    return { 
+        data: query.data || [], 
+        loading: query.isLoading 
+    };
 }

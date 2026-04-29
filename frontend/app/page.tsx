@@ -10,9 +10,9 @@ import { ArrowRight, Shield, Truck, RefreshCw, Award } from "lucide-react";
 import GoldBackground from "@/components/ui/GoldBackground";
 import ProductCard from "@/components/ui/ProductCard";
 import StarRating from "@/components/ui/StarRating";
-import { testimonials, categories } from "@/lib/products";
+import { testimonials } from "@/lib/products";
 import { useAuth } from "@/lib/auth-context";
-import { useFeaturedProducts } from "@/hooks/useProducts";
+import { useFeaturedProducts, useCategories } from "@/hooks/useProducts";
 
 function FadeInSection({
   children,
@@ -47,7 +47,10 @@ const categoryImages = [
 export default function HomePage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
-  const { data: featuredProducts, loading: productsLoading } = useFeaturedProducts(4);
+  const { data: featuredProducts, loading: productsLoading } =
+    useFeaturedProducts(4);
+  const { data: categories = [], isLoading: categoriesLoading } =
+    useCategories();
 
   // useEffect(() => {
   //   if (!loading && !user) {
@@ -272,34 +275,34 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {productsLoading
               ? Array.from({ length: 4 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-lg overflow-hidden animate-pulse"
-                  style={{ border: "1px solid rgba(212,175,55,0.15)" }}
-                >
                   <div
-                    className="aspect-[3/4]"
-                    style={{ background: "rgba(212,175,55,0.06)" }}
-                  />
-                  <div className="p-4 space-y-3">
+                    key={i}
+                    className="rounded-lg overflow-hidden animate-pulse"
+                    style={{ border: "1px solid rgba(212,175,55,0.15)" }}
+                  >
                     <div
-                      className="h-3 w-1/2 rounded"
-                      style={{ background: "rgba(212,175,55,0.08)" }}
+                      className="aspect-[3/4]"
+                      style={{ background: "rgba(212,175,55,0.06)" }}
                     />
-                    <div
-                      className="h-4 w-3/4 rounded"
-                      style={{ background: "rgba(212,175,55,0.08)" }}
-                    />
-                    <div
-                      className="h-5 w-1/3 rounded"
-                      style={{ background: "rgba(212,175,55,0.08)" }}
-                    />
+                    <div className="p-4 space-y-3">
+                      <div
+                        className="h-3 w-1/2 rounded"
+                        style={{ background: "rgba(212,175,55,0.08)" }}
+                      />
+                      <div
+                        className="h-4 w-3/4 rounded"
+                        style={{ background: "rgba(212,175,55,0.08)" }}
+                      />
+                      <div
+                        className="h-5 w-1/3 rounded"
+                        style={{ background: "rgba(212,175,55,0.08)" }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))
+                ))
               : featuredProducts.map((product, i) => (
-                <ProductCard key={product.id} product={product} index={i} />
-              ))}
+                  <ProductCard key={product.id} product={product} index={i} />
+                ))}
           </div>
 
           <FadeInSection delay={0.3}>
@@ -335,51 +338,59 @@ export default function HomePage() {
           </FadeInSection>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {categories.slice(1).map((cat, i) => (
-              <FadeInSection key={cat.id} delay={i * 0.07}>
-                <Link href={`/products?category=${cat.id}`}>
-                  <motion.div
-                    whileHover={{ scale: 1.03 }}
-                    className="relative aspect-[3/4] rounded-lg overflow-hidden group cursor-pointer"
-                    style={{ border: "1px solid rgba(212,175,55,0.2)" }}
-                  >
-                    <Image
-                      src={categoryImages[i]}
-                      alt={cat.name}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-110"
-                      sizes="200px"
-                    />
-                    <div
-                      className="absolute inset-0 transition-opacity duration-300"
-                      style={{
-                        background:
-                          "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 60%)",
-                      }}
-                    />
-                    <div
-                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      style={{ background: "rgba(212,175,55,0.15)" }}
-                    />
-                    <div className="absolute bottom-3 left-0 right-0 text-center">
-                      <p className="font-serif text-sm text-white font-medium">
-                        {cat.name}
-                      </p>
-                      <p className="text-xs text-white/70 mt-0.5">
-                        {cat.count} items
-                      </p>
-                    </div>
-                    <div
-                      className="absolute top-2 right-2 w-5 h-5 opacity-0 group-hover:opacity-70 transition-opacity duration-300"
-                      style={{
-                        borderTop: "1px solid #D4AF37",
-                        borderRight: "1px solid #D4AF37",
-                      }}
-                    />
-                  </motion.div>
-                </Link>
-              </FadeInSection>
-            ))}
+            {categoriesLoading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="aspect-[3/4] rounded-lg overflow-hidden animate-pulse"
+                    style={{ border: "1px solid rgba(212,175,55,0.15)" }}
+                  />
+                ))
+              : categories.map((cat, i) => (
+                  <FadeInSection key={cat.id} delay={i * 0.07}>
+                    <Link href={`/products?category=${cat.id}`}>
+                      <motion.div
+                        whileHover={{ scale: 1.03 }}
+                        className="relative aspect-[3/4] rounded-lg overflow-hidden group cursor-pointer"
+                        style={{ border: "1px solid rgba(212,175,55,0.2)" }}
+                      >
+                        <Image
+                          src={categoryImages[i % categoryImages.length]}
+                          alt={cat.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          sizes="200px"
+                        />
+                        <div
+                          className="absolute inset-0 transition-opacity duration-300"
+                          style={{
+                            background:
+                              "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 60%)",
+                          }}
+                        />
+                        <div
+                          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                          style={{ background: "rgba(212,175,55,0.15)" }}
+                        />
+                        <div className="absolute bottom-3 left-0 right-0 text-center">
+                          <p className="font-serif text-sm text-white font-medium">
+                            {cat.name}
+                          </p>
+                          <p className="text-xs text-white/70 mt-0.5">
+                            {cat.count} items
+                          </p>
+                        </div>
+                        <div
+                          className="absolute top-2 right-2 w-5 h-5 opacity-0 group-hover:opacity-70 transition-opacity duration-300"
+                          style={{
+                            borderTop: "1px solid #D4AF37",
+                            borderRight: "1px solid #D4AF37",
+                          }}
+                        />
+                      </motion.div>
+                    </Link>
+                  </FadeInSection>
+                ))}
           </div>
         </div>
       </section>

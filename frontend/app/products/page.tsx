@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SlidersHorizontal, X, ChevronDown, Search, Grid3x3 as Grid3X3, LayoutList } from 'lucide-react';
 import ProductCard from '@/components/ui/ProductCard';
 import GoldBackground from '@/components/ui/GoldBackground';
-import { categories as staticCategories } from '@/lib/products';
 import { useProductList, useCategories } from '@/hooks/useProducts';
 import type { ListProductsParams } from '@/lib/api';
 
@@ -18,10 +17,10 @@ const sortOptions = [
 ];
 
 const priceRanges = [
-  { label: 'Under $300', min: 0, max: 300 },
-  { label: '$300 – $800', min: 300, max: 800 },
-  { label: '$800 – $1,500', min: 800, max: 1500 },
-  { label: 'Over $1,500', min: 1500, max: Infinity },
+  { label: 'Under 300 Birr', min: 0, max: 300 },
+  { label: '300 – 800 Birr', min: 300, max: 800 },
+  { label: '800 – 1,500 Birr', min: 800, max: 1500 },
+  { label: 'Over 1,500 Birr', min: 1500, max: Infinity },
 ];
 
 /** Skeleton card for loading state */
@@ -252,8 +251,8 @@ export default function ProductsPage() {
                           key={cat.id}
                           onClick={() => setSelectedCategory(cat.id)}
                           className={`w-full text-left flex items-center justify-between px-3 py-2 rounded text-sm transition-all duration-200 ${selectedCategory === cat.id
-                              ? 'text-[#D4AF37] bg-[rgba(212,175,55,0.1)]'
-                              : 'text-foreground hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.05)]'
+                            ? 'text-[#D4AF37] bg-[rgba(212,175,55,0.1)]'
+                            : 'text-foreground hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.05)]'
                             }`}
                         >
                           <span>{cat.name}</span>
@@ -277,8 +276,8 @@ export default function ProductsPage() {
                         >
                           <div
                             className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all duration-200 ${selectedPriceRanges.includes(idx)
-                                ? 'border-[#D4AF37]'
-                                : 'border-muted-foreground group-hover:border-[#D4AF37]'
+                              ? 'border-[#D4AF37]'
+                              : 'border-muted-foreground group-hover:border-[#D4AF37]'
                               }`}
                             style={{
                               background: selectedPriceRanges.includes(idx)

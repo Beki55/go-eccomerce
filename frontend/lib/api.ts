@@ -171,3 +171,30 @@ export async function fetchProductBySlug(slug: string): Promise<BackendProduct> 
 export async function fetchCategories(): Promise<BackendCategory[]> {
     return fetchJSON<BackendCategory[]>('/categories');
 }
+
+export const apiClient = {
+    get: async <T = any>(path: string, options?: RequestInit) => {
+        const data = await fetchJSON<T>(path, { ...options, method: 'GET' });
+        return { data };
+    },
+    post: async <T = any>(path: string, body?: any, options?: RequestInit) => {
+        const data = await fetchJSON<T>(path, {
+            ...options,
+            method: 'POST',
+            body: body ? JSON.stringify(body) : undefined,
+        });
+        return { data };
+    },
+    put: async <T = any>(path: string, body?: any, options?: RequestInit) => {
+        const data = await fetchJSON<T>(path, {
+            ...options,
+            method: 'PUT',
+            body: body ? JSON.stringify(body) : undefined,
+        });
+        return { data };
+    },
+    delete: async <T = any>(path: string, options?: RequestInit) => {
+        const data = await fetchJSON<T>(path, { ...options, method: 'DELETE' });
+        return { data };
+    },
+};

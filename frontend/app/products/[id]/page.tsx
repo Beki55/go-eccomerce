@@ -150,15 +150,15 @@ export default function ProductDetailPage() {
 
             <div className="flex items-baseline gap-3 mb-8">
               <span className="font-serif text-4xl font-semibold gold-text">
-                ${product.price.toLocaleString()}
+                {product.price.toLocaleString()} Birr
               </span>
               {product.originalPrice && (
                 <>
                   <span className="text-lg text-muted-foreground line-through">
-                    ${product.originalPrice.toLocaleString()}
+                    {product.originalPrice.toLocaleString()} Birr
                   </span>
                   <span className="px-2 py-0.5 text-xs rounded-full bg-red-900/20 text-red-400 font-medium">
-                    Save ${(product.originalPrice - product.price).toLocaleString()}
+                    Save {(product.originalPrice - product.price).toLocaleString()} Birr
                   </span>
                 </>
               )}
