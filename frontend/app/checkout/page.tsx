@@ -313,7 +313,7 @@ export default function CheckoutPage() {
                         <p className="text-xs text-muted-foreground">{item.product.category}</p>
                       </div>
                       <p className="text-sm font-serif font-semibold" style={{ color: '#D4AF37' }}>
-                        ${(item.product.price * item.quantity).toLocaleString()}
+                        {(item.product.price * item.quantity).toLocaleString()} Birr
                       </p>
                     </div>
                   ))}
@@ -322,21 +322,21 @@ export default function CheckoutPage() {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span>${subtotal.toLocaleString()}</span>
+                    <span>{subtotal.toLocaleString()} Birr</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span>{shippingCost === 0 ? <span style={{ color: '#D4AF37' }}>Free</span> : `$${shippingCost}`}</span>
+                    <span>{shippingCost === 0 ? <span style={{ color: '#D4AF37' }}>Free</span> : `${shippingCost} Birr`}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>{tax.toFixed(2)} Birr</span>
                   </div>
                 </div>
                 <div className="gold-divider my-4" />
                 <div className="flex justify-between items-baseline">
                   <span className="font-semibold">Total</span>
-                  <span className="font-serif text-2xl font-semibold gold-text">${total.toFixed(2)}</span>
+                  <span className="font-serif text-2xl font-semibold gold-text">{total.toFixed(2)} Birr</span>
                 </div>
               </div>
             </div>

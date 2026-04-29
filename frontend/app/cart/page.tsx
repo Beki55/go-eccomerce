@@ -149,11 +149,11 @@ export default function CartPage() {
 
                         <div className="text-right">
                           <p className="font-serif text-lg font-semibold gold-text">
-                            ${(item.product.price * item.quantity).toLocaleString()}
+                            {(item.product.price * item.quantity).toLocaleString()} Birr
                           </p>
                           {item.quantity > 1 && (
                             <p className="text-xs text-muted-foreground">
-                              ${item.product.price.toLocaleString()} each
+                              {item.product.price.toLocaleString()} Birr each
                             </p>
                           )}
                         </div>
@@ -222,21 +222,21 @@ export default function CartPage() {
                 <div className="space-y-3 mb-5">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal ({items.length} items)</span>
-                    <span>${subtotal.toLocaleString()}</span>
+                    <span>{subtotal.toLocaleString()} Birr</span>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Discount ({appliedCoupon})</span>
-                      <span className="text-green-400">-${discount.toFixed(0)}</span>
+                      <span className="text-green-400">-{discount.toFixed(0)} Birr</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Shipping</span>
-                    <span>{shipping === 0 ? <span style={{ color: '#D4AF37' }}>Free</span> : `$${shipping}`}</span>
+                    <span>{shipping === 0 ? <span style={{ color: '#D4AF37' }}>Free</span> : `${shipping} Birr`}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Estimated Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>{tax.toFixed(2)} Birr</span>
                   </div>
                 </div>
 
@@ -245,7 +245,7 @@ export default function CartPage() {
                 <div className="flex justify-between items-baseline mb-6">
                   <span className="font-sans font-semibold">Total</span>
                   <span className="font-serif text-2xl font-semibold gold-text">
-                    ${total.toFixed(2)}
+                    {total.toFixed(2)} Birr
                   </span>
                 </div>
 
@@ -261,7 +261,7 @@ export default function CartPage() {
                 </Link>
 
                 <p className="text-xs text-center text-muted-foreground mt-4">
-                  Free shipping on orders over $500
+                  Free shipping on orders over 500 Birr
                 </p>
 
                 <div className="mt-6 flex items-center justify-center gap-3">

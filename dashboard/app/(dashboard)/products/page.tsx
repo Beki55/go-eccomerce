@@ -41,6 +41,7 @@ import {
   useDeleteProduct,
   useUpdateStock,
 } from "@/hooks/use-products";
+import { BASE_URL } from "@/lib/api/client";
 
 export default function ProductsPage() {
   const [search, setSearch] = useState("");
@@ -159,7 +160,7 @@ export default function ProductsPage() {
                             src={
                               product.images[0].startsWith("http")
                                 ? product.images[0]
-                                : `http://localhost:8080${product.images[0]}`
+                                : `${BASE_URL}${product.images[0]}`
                             }
                             alt={product.name}
                             className="object-cover size-full"

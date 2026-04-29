@@ -37,11 +37,18 @@ export interface Product {
   brand?: Brand;
 }
 
+export interface PaginatedProductsResponse {
+  products: Product[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export const productApi = {
   // Products
   listProducts: (params?: any) => {
     const searchParams = new URLSearchParams(params).toString();
-    return apiClient.get<any>(`/products?${searchParams}`);
+    return apiClient.get<PaginatedProductsResponse>(`/products?${searchParams}`);
   },
   getProduct: (id: string) => apiClient.get<Product>(`/products/${id}`),
   createProduct: (data: any) => apiClient.post<Product>("/products", data),
