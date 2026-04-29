@@ -86,10 +86,11 @@ func main() {
 		products := api.Group("/products")
 		{
 			products.GET("", productHandler.ListProducts)
+			products.GET("/featured", productHandler.GetFeaturedProducts)
+			products.GET("/low-stock", productHandler.GetLowStockProducts)
+			products.GET("/slug/:slug", productHandler.GetProductBySlug)
 			products.GET("/:id", productHandler.GetProduct)
 			products.GET("/:id/variants", productHandler.ListVariants)
-			products.GET("/slug/:slug", productHandler.GetProductBySlug)
-			products.GET("/low-stock", productHandler.GetLowStockProducts)
 		}
 
 		// Public category routes

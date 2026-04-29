@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SlidersHorizontal, X, ChevronDown, Search, Grid3x3 as Grid3X3, LayoutList } from 'lucide-react';
 import ProductCard from '@/components/ui/ProductCard';
 import GoldBackground from '@/components/ui/GoldBackground';
-import { products, categories } from '@/lib/products';
+import { categories as staticCategories } from '@/lib/products';
+import { useProductList, useCategories } from '@/hooks/useProducts';
+import type { ListProductsParams } from '@/lib/api';
 
 const sortOptions = [
   { value: 'featured', label: 'Featured' },
@@ -22,6 +24,23 @@ const priceRanges = [
   { label: 'Over $1,500', min: 1500, max: Infinity },
 ];
 
+/** Skeleton card for loading state */
+function ProductSkeleton() {
+  return (
+    <div
+      className="rounded-lg overflow-hidden animate-pulse"
+      style={{ border: '1px solid rgba(212,175,55,0.15)' }}
+    >
+      <div className="aspect-[3/4]" style={{ background: 'rgba(212,175,55,0.06)' }} />
+      <div className="p-4 space-y-3">
+        <div className="h-3 w-1/2 rounded" style={{ background: 'rgba(212,175,55,0.08)' }} />
+        <div className="h-4 w-3/4 rounded" style={{ background: 'rgba(212,175,55,0.08)' }} />
+        <div className="h-5 w-1/3 rounded" style={{ background: 'rgba(212,175,55,0.08)' }} />
+      </div>
+    </div>
+  );
+}
+
 export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedPriceRanges, setSelectedPriceRanges] = useState<number[]>([]);
@@ -31,25 +50,21 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const activeFilters: string[] = [];
-  if (selectedCategory !== 'all') {
-    activeFilters.push(categories.find(c => c.id === selectedCategory)?.name || selectedCategory);
-  }
-  selectedPriceRanges.forEach(idx => activeFilters.push(priceRanges[idx].label));
+  // Build backend params
+  const apiParams: ListProductsParams = {
+    limit: 50,
+    is_active: true,
+    ...(selectedCategory !== 'all' && { category_id: selectedCategory }),
+    ...(sortBy === 'featured' && { is_featured: true }),
+    ...(searchQuery && { search: searchQuery }),
+  };
 
+  const { data: products, total, loading } = useProductList(apiParams);
+  const { data: categories } = useCategories();
+
+  // Client-side price filtering & sorting (on top of server results)
   const filteredProducts = useMemo(() => {
     let result = [...products];
-
-    if (searchQuery) {
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-
-    if (selectedCategory !== 'all') {
-      result = result.filter(p => p.category.toLowerCase() === selectedCategory);
-    }
 
     if (selectedPriceRanges.length > 0) {
       result = result.filter(p =>
@@ -68,7 +83,13 @@ export default function ProductsPage() {
     }
 
     return result;
-  }, [selectedCategory, selectedPriceRanges, sortBy, searchQuery]);
+  }, [products, selectedPriceRanges, sortBy]);
+
+  const activeFilters: string[] = [];
+  if (selectedCategory !== 'all') {
+    activeFilters.push(categories.find(c => c.id === selectedCategory)?.name || selectedCategory);
+  }
+  selectedPriceRanges.forEach(idx => activeFilters.push(priceRanges[idx].label));
 
   const togglePriceRange = (idx: number) => {
     setSelectedPriceRanges(prev =>
@@ -133,7 +154,7 @@ export default function ProductsPage() {
 
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground font-light">
-              {filteredProducts.length} items
+              {loading ? '…' : `${filteredProducts.length} items`}
             </span>
 
             <div className="flex items-center gap-1 border rounded p-1" style={{ borderColor: 'rgba(212,175,55,0.2)' }}>
@@ -196,10 +217,7 @@ export default function ProductsPage() {
                 style={{ background: 'rgba(212,175,55,0.15)', color: '#D4AF37', border: '1px solid rgba(212,175,55,0.3)' }}
               >
                 {f}
-                <button
-                  onClick={clearAllFilters}
-                  className="hover:text-[#FFD700] transition-colors"
-                >
+                <button onClick={clearAllFilters} className="hover:text-[#FFD700] transition-colors">
                   <X size={10} />
                 </button>
               </span>
@@ -233,11 +251,10 @@ export default function ProductsPage() {
                         <button
                           key={cat.id}
                           onClick={() => setSelectedCategory(cat.id)}
-                          className={`w-full text-left flex items-center justify-between px-3 py-2 rounded text-sm transition-all duration-200 ${
-                            selectedCategory === cat.id
+                          className={`w-full text-left flex items-center justify-between px-3 py-2 rounded text-sm transition-all duration-200 ${selectedCategory === cat.id
                               ? 'text-[#D4AF37] bg-[rgba(212,175,55,0.1)]'
                               : 'text-foreground hover:text-[#D4AF37] hover:bg-[rgba(212,175,55,0.05)]'
-                          }`}
+                            }`}
                         >
                           <span>{cat.name}</span>
                           <span className="text-xs text-muted-foreground">{cat.count}</span>
@@ -259,11 +276,10 @@ export default function ProductsPage() {
                           className="flex items-center gap-3 cursor-pointer group"
                         >
                           <div
-                            className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all duration-200 ${
-                              selectedPriceRanges.includes(idx)
+                            className={`w-4 h-4 rounded-sm border flex items-center justify-center transition-all duration-200 ${selectedPriceRanges.includes(idx)
                                 ? 'border-[#D4AF37]'
                                 : 'border-muted-foreground group-hover:border-[#D4AF37]'
-                            }`}
+                              }`}
                             style={{
                               background: selectedPriceRanges.includes(idx)
                                 ? 'linear-gradient(135deg, #FFD700, #D4AF37)'
@@ -294,7 +310,13 @@ export default function ProductsPage() {
 
           {/* Products Grid */}
           <div className="flex-1">
-            {filteredProducts.length === 0 ? (
+            {loading ? (
+              <div className={`grid gap-6 ${viewMode === 'list' ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'}`}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <ProductSkeleton key={i} />
+                ))}
+              </div>
+            ) : filteredProducts.length === 0 ? (
               <div className="text-center py-20">
                 <div className="font-serif text-5xl mb-4" style={{ color: 'rgba(212,175,55,0.3)' }}>✦</div>
                 <h3 className="font-serif text-2xl mb-2">No items found</h3>

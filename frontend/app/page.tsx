@@ -10,10 +10,9 @@ import { ArrowRight, Shield, Truck, RefreshCw, Award } from "lucide-react";
 import GoldBackground from "@/components/ui/GoldBackground";
 import ProductCard from "@/components/ui/ProductCard";
 import StarRating from "@/components/ui/StarRating";
-import { products, testimonials, categories } from "@/lib/products";
+import { testimonials, categories } from "@/lib/products";
 import { useAuth } from "@/lib/auth-context";
-
-const featuredProducts = products.slice(0, 4);
+import { useFeaturedProducts } from "@/hooks/useProducts";
 
 function FadeInSection({
   children,
@@ -48,6 +47,7 @@ const categoryImages = [
 export default function HomePage() {
   const { user, isLoading } = useAuth();
   const router = useRouter();
+  const { data: featuredProducts, loading: productsLoading } = useFeaturedProducts(4);
 
   // useEffect(() => {
   //   if (!loading && !user) {
@@ -270,9 +270,36 @@ export default function HomePage() {
           </FadeInSection>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product, i) => (
-              <ProductCard key={product.id} product={product} index={i} />
-            ))}
+            {productsLoading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-lg overflow-hidden animate-pulse"
+                  style={{ border: "1px solid rgba(212,175,55,0.15)" }}
+                >
+                  <div
+                    className="aspect-[3/4]"
+                    style={{ background: "rgba(212,175,55,0.06)" }}
+                  />
+                  <div className="p-4 space-y-3">
+                    <div
+                      className="h-3 w-1/2 rounded"
+                      style={{ background: "rgba(212,175,55,0.08)" }}
+                    />
+                    <div
+                      className="h-4 w-3/4 rounded"
+                      style={{ background: "rgba(212,175,55,0.08)" }}
+                    />
+                    <div
+                      className="h-5 w-1/3 rounded"
+                      style={{ background: "rgba(212,175,55,0.08)" }}
+                    />
+                  </div>
+                </div>
+              ))
+              : featuredProducts.map((product, i) => (
+                <ProductCard key={product.id} product={product} index={i} />
+              ))}
           </div>
 
           <FadeInSection delay={0.3}>

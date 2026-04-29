@@ -44,7 +44,7 @@ func (s *authService) Register(ctx context.Context, name, email, password string
 		PasswordHash: string(hashedPassword),
 		Role:         common.RoleCustomer,
 		IsActive:     true,
-	}
+		}
 
 	if err := s.repo.Create(user); err != nil {
 		return nil, "", "", err

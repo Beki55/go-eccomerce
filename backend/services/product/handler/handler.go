@@ -14,6 +14,119 @@ import (
 	"gorm.io/datatypes"
 )
 
+// ─── Response DTOs ────────────────────────────────────────────────────────────
+
+// ProductResponse is the frontend-friendly representation of a product.
+// It decodes JSONB columns (images, tags, attributes) into Go slices/maps
+// so the client always receives proper JSON arrays instead of escaped strings.
+type ProductResponse struct {
+	ID                uuid.UUID              `json:"id"`
+	SKU               string                 `json:"sku"`
+	Name              string                 `json:"name"`
+	Slug              string                 `json:"slug"`
+	ShortDescription  *string                `json:"short_description,omitempty"`
+	Description       *string                `json:"description,omitempty"`
+	Price             decimal.Decimal        `json:"price"`
+	ComparePrice      *decimal.Decimal       `json:"compare_price,omitempty"`
+	CostPerItem       *decimal.Decimal       `json:"cost_per_item,omitempty"`
+	StockQuantity     int                    `json:"stock_quantity"`
+	LowStockThreshold int                    `json:"low_stock_threshold"`
+	Images            []string               `json:"images"`
+	Tags              []string               `json:"tags"`
+	Attributes        map[string]interface{} `json:"attributes,omitempty"`
+	IsActive          bool                   `json:"is_active"`
+	IsFeatured        bool                   `json:"is_featured"`
+	IsDigital         bool                   `json:"is_digital"`
+	ViewsCount        int                    `json:"views_count"`
+	SoldCount         int                    `json:"sold_count"`
+	Category          *CategoryResponse      `json:"category,omitempty"`
+	Brand             *BrandResponse         `json:"brand,omitempty"`
+	CreatedAt         string                 `json:"created_at"`
+	UpdatedAt         string                 `json:"updated_at"`
+}
+
+type CategoryResponse struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+	Slug string    `json:"slug"`
+}
+
+type BrandResponse struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+	Slug string    `json:"slug"`
+	Logo *string   `json:"logo,omitempty"`
+}
+
+// toProductResponse converts a models.Product into a ProductResponse.
+func toProductResponse(p *models.Product) ProductResponse {
+	// Decode images
+	var images []string
+	if len(p.Images) > 0 {
+		_ = json.Unmarshal([]byte(p.Images), &images)
+	}
+	if images == nil {
+		images = []string{}
+	}
+
+	// Decode tags
+	var tags []string
+	if len(p.Tags) > 0 {
+		_ = json.Unmarshal([]byte(p.Tags), &tags)
+	}
+	if tags == nil {
+		tags = []string{}
+	}
+
+	// Decode attributes
+	var attributes map[string]interface{}
+	if len(p.Attributes) > 0 {
+		_ = json.Unmarshal([]byte(p.Attributes), &attributes)
+	}
+
+	resp := ProductResponse{
+		ID:                p.ID,
+		SKU:               p.SKU,
+		Name:              p.Name,
+		Slug:              p.Slug,
+		ShortDescription:  p.ShortDescription,
+		Description:       p.Description,
+		Price:             p.Price,
+		ComparePrice:      p.ComparePrice,
+		CostPerItem:       p.CostPerItem,
+		StockQuantity:     p.StockQuantity,
+		LowStockThreshold: p.LowStockThreshold,
+		Images:            images,
+		Tags:              tags,
+		Attributes:        attributes,
+		IsActive:          p.IsActive,
+		IsFeatured:        p.IsFeatured,
+		IsDigital:         p.IsDigital,
+		ViewsCount:        p.ViewsCount,
+		SoldCount:         p.SoldCount,
+		CreatedAt:         p.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt:         p.UpdatedAt.Format("2006-01-02T15:04:05Z"),
+	}
+
+	if p.Category != nil {
+		resp.Category = &CategoryResponse{
+			ID:   p.Category.ID,
+			Name: p.Category.Name,
+			Slug: p.Category.Slug,
+		}
+	}
+	if p.Brand != nil {
+		resp.Brand = &BrandResponse{
+			ID:   p.Brand.ID,
+			Name: p.Brand.Name,
+			Slug: p.Brand.Slug,
+			Logo: p.Brand.Logo,
+		}
+	}
+
+	return resp
+}
+
 type ProductHandler struct {
 	productService service.ProductService
 }
@@ -115,7 +228,7 @@ func (h *ProductHandler) GetProduct(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, product)
+	c.JSON(http.StatusOK, toProductResponse(product))
 }
 
 func (h *ProductHandler) GetProductBySlug(c *gin.Context) {
@@ -127,7 +240,7 @@ func (h *ProductHandler) GetProductBySlug(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, product)
+	c.JSON(http.StatusOK, toProductResponse(product))
 }
 
 func (h *ProductHandler) UpdateProduct(c *gin.Context) {
@@ -202,10 +315,44 @@ func (h *ProductHandler) ListProducts(c *gin.Context) {
 		return
 	}
 
+	// Map to DTO so the frontend gets properly decoded images/tags arrays
+	responses := make([]ProductResponse, len(products))
+	for i, p := range products {
+		responses[i] = toProductResponse(p)
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"products": products,
+		"products": responses,
 		"total":    total,
 		"page":     page,
+		"limit":    limit,
+	})
+}
+
+// GetFeaturedProducts returns a curated list of featured products for the home page.
+func (h *ProductHandler) GetFeaturedProducts(c *gin.Context) {
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "8"))
+
+	filters := map[string]interface{}{
+		"is_featured": true,
+		"is_active":   true,
+	}
+
+	products, total, err := h.productService.ListProducts(c.Request.Context(), 1, limit, filters)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	responses := make([]ProductResponse, len(products))
+	for i, p := range products {
+		responses[i] = toProductResponse(p)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"products": responses,
+		"total":    total,
+		"page":     1,
 		"limit":    limit,
 	})
 }
