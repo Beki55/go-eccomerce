@@ -34,7 +34,20 @@ const mockOrders = [
     status: "Delivered",
     items: 2,
     total: 1090,
-    product: ({ id: "mock", name: "Mock Product", price: 0, images: ["/placeholder.jpg"], category: "Mock", subcategory: "Mock", description: "", inStock: true, rating: 5, reviewCount: 0, tags: [], features: [] } as Product),
+    product: {
+      id: "mock",
+      name: "Mock Product",
+      price: 0,
+      images: ["/placeholder.jpg"],
+      category: "Mock",
+      subcategory: "Mock",
+      description: "",
+      inStock: true,
+      rating: 5,
+      reviewCount: 0,
+      tags: [],
+      features: [],
+    } as Product,
   },
   {
     id: "LUXE-B7C1M4",
@@ -42,7 +55,20 @@ const mockOrders = [
     status: "In Transit",
     items: 1,
     total: 1290,
-    product: ({ id: "mock", name: "Mock Product", price: 0, images: ["/placeholder.jpg"], category: "Mock", subcategory: "Mock", description: "", inStock: true, rating: 5, reviewCount: 0, tags: [], features: [] } as Product),
+    product: {
+      id: "mock",
+      name: "Mock Product",
+      price: 0,
+      images: ["/placeholder.jpg"],
+      category: "Mock",
+      subcategory: "Mock",
+      description: "",
+      inStock: true,
+      rating: 5,
+      reviewCount: 0,
+      tags: [],
+      features: [],
+    } as Product,
   },
   {
     id: "LUXE-D5E9N2",
@@ -50,7 +76,20 @@ const mockOrders = [
     status: "Processing",
     items: 3,
     total: 2420,
-    product: ({ id: "mock", name: "Mock Product", price: 0, images: ["/placeholder.jpg"], category: "Mock", subcategory: "Mock", description: "", inStock: true, rating: 5, reviewCount: 0, tags: [], features: [] } as Product),
+    product: {
+      id: "mock",
+      name: "Mock Product",
+      price: 0,
+      images: ["/placeholder.jpg"],
+      category: "Mock",
+      subcategory: "Mock",
+      description: "",
+      inStock: true,
+      rating: 5,
+      reviewCount: 0,
+      tags: [],
+      features: [],
+    } as Product,
   },
 ];
 
@@ -173,30 +212,19 @@ export default function AccountPage() {
                 className="p-6 text-center border-b"
                 style={{ borderColor: "rgba(212,175,55,0.15)" }}
               >
-                <div className="relative w-20 h-20 mx-auto mb-3">
-                  <Image
-                    src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150"
-                    alt="Profile"
-                    width={80}
-                    height={80}
-                    className="rounded-full object-cover w-20 h-20"
-                    style={{ border: "2px solid rgba(212,175,55,0.5)" }}
-                  />
-                  <button
-                    className="absolute bottom-0 right-0 w-7 h-7 rounded-full flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(135deg, #FFD700, #D4AF37)",
-                      color: "#000",
-                    }}
-                  >
-                    <Edit2 size={11} />
-                  </button>
+                <div
+                  className="relative w-20 h-20 mx-auto mb-3 rounded-full flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(135deg, #FFD700, #D4AF37)",
+                  }}
+                >
+                  <User size={40} color="#000" />
                 </div>
                 <h3 className="font-serif text-lg font-medium">
-                  Alexandre Dupont
+                  {user?.name || "User"}
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Member since 2022
+                  {user?.email || "user@example.com"}
                 </p>
                 <div className="mt-2 flex items-center justify-center gap-1">
                   <Star size={12} fill="#D4AF37" style={{ color: "#D4AF37" }} />
@@ -214,10 +242,11 @@ export default function AccountPage() {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${activeTab === item.id
-                      ? "text-[#D4AF37]"
-                      : "text-muted-foreground hover:text-[#D4AF37]"
-                      }`}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-all duration-200 ${
+                      activeTab === item.id
+                        ? "text-[#D4AF37]"
+                        : "text-muted-foreground hover:text-[#D4AF37]"
+                    }`}
                     style={{
                       background:
                         activeTab === item.id
