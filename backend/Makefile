@@ -11,7 +11,7 @@ GOCLEAN = $(GOCMD) clean
 GOTEST = $(GOCMD) test
 GOMOD = $(GOCMD) mod
 
-.PHONY: all build clean tidy test help $(SERVICES)
+.PHONY: all build clean tidy test help run $(SERVICES)
 
 all: build
 
@@ -35,6 +35,13 @@ tidy:
 ## test: Run tests for all packages
 test:
 	@$(GOTEST) -v ./...
+
+## run: Run all services
+run:
+	@for service in $(SERVICES); do \
+		echo "Starting $$service..."; \
+		make run-$$service & \
+	done
 
 ## help: Show this help message
 help:
