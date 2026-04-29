@@ -48,7 +48,9 @@ export const productApi = {
   // Products
   listProducts: (params?: any) => {
     const searchParams = new URLSearchParams(params).toString();
-    return apiClient.get<PaginatedProductsResponse>(`/products?${searchParams}`);
+    return apiClient.get<PaginatedProductsResponse>(
+      `/products?${searchParams}`,
+    );
   },
   getProduct: (id: string) => apiClient.get<Product>(`/products/${id}`),
   createProduct: (data: any) => apiClient.post<Product>("/products", data),
