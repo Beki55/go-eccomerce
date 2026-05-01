@@ -49,8 +49,7 @@ export default function HomePage() {
   const router = useRouter();
   const { data: featuredProducts, loading: productsLoading } =
     useFeaturedProducts(4);
-  const { data: categories = [], isLoading: categoriesLoading } =
-    useCategories();
+  const { data: categories = [], loading: categoriesLoading } = useCategories();
 
   // useEffect(() => {
   //   if (!loading && !user) {
