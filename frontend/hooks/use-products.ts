@@ -96,7 +96,9 @@ export function useCategories() {
     queryFn: async (): Promise<
       { id: string; name: string; count: number }[]
     > => {
-      const backendCategories = await fetchCategories();
+      // fetchCategories was undefined; call backend directly
+      const response = await axios.get(`${API_BASE_URL}/api/categories`);
+      const backendCategories = response.data as { id: string; name: string }[];
       // For now, add a count property (could be fetched separately or calculated)
       return backendCategories.map((cat) => ({
         id: cat.id,
