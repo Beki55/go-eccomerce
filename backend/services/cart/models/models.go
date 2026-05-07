@@ -39,8 +39,6 @@ type CartItem struct {
 	UnitPrice  decimal.Decimal `gorm:"type:decimal(10,2);not null" json:"unit_price"`
 	TotalPrice decimal.Decimal `gorm:"type:decimal(10,2);not null" json:"total_price"`
 	AddedAt    time.Time       `gorm:"autoCreateTime" json:"added_at"`
-
-	Cart Cart `gorm:"foreignKey:CartID" json:"cart,omitempty"`
 }
 
 func (ci *CartItem) BeforeCreate(tx *gorm.DB) error {

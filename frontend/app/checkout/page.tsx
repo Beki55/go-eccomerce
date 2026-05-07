@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronRight, CreditCard, Truck, User, MapPin, ShieldCheck } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
+import { useQuery } from '@tanstack/react-query';
+import { fetchProduct } from '@/lib/api';
 import GoldBackground from '@/components/ui/GoldBackground';
 
 const steps = [
@@ -301,19 +303,19 @@ export default function CheckoutPage() {
                 <h3 className="font-serif text-xl font-light mb-5">Order Summary</h3>
                 <div className="space-y-3 mb-5">
                   {items.map(item => (
-                    <div key={item.product.id} className="flex gap-3">
+                    <div key={item.id} className="flex gap-3">
                       <div className="relative w-12 h-16 rounded overflow-hidden flex-shrink-0" style={{ border: '1px solid rgba(212,175,55,0.2)' }}>
-                        <Image src={item.product.images[0]} alt={item.product.name} fill className="object-cover" />
+                        <Image src={item.product?.images?.[0] || '/placeholder.jpg'} alt={item.product?.name || 'Product'} fill className="object-cover" />
                         <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold" style={{ background: 'linear-gradient(135deg, #FFD700, #D4AF37)', color: '#000' }}>
                           {item.quantity}
                         </div>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.product.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.product.category}</p>
+                        <p className="text-sm font-medium truncate">{item.product?.name || 'Product'}</p>
+                        <p className="text-xs text-muted-foreground">{item.product?.category?.name || 'General'}</p>
                       </div>
                       <p className="text-sm font-serif font-semibold" style={{ color: '#D4AF37' }}>
-                        {(item.product.price * item.quantity).toLocaleString()} Birr
+                        {parseFloat(item.total_price).toLocaleString()} Birr
                       </p>
                     </div>
                   ))}

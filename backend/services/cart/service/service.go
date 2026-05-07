@@ -13,12 +13,12 @@ import (
 
 type CartService interface {
 	GetOrCreateCart(userID *uuid.UUID, sessionID *string) (*models.Cart, error)
-	AddItem(cartID uuid.UUID, productID uuid.UUID, variantID *uuid.UUID, quantity int, unitPrice decimal.Decimal) error
-	UpdateItemQuantity(cartID uuid.UUID, itemID uuid.UUID, quantity int) error
-	RemoveItem(cartID uuid.UUID, itemID uuid.UUID) error
-	ClearCart(cartID uuid.UUID) error
-	ApplyCoupon(cartID uuid.UUID, couponCode string, discountAmount decimal.Decimal) error
-	RemoveCoupon(cartID uuid.UUID) error
+	AddItem(cart *models.Cart, productID uuid.UUID, variantID *uuid.UUID, quantity int, unitPrice decimal.Decimal) error
+	UpdateItemQuantity(cart *models.Cart, itemID uuid.UUID, quantity int) error
+	RemoveItem(cart *models.Cart, itemID uuid.UUID) error
+	ClearCart(cart *models.Cart) error
+	ApplyCoupon(cart *models.Cart, couponCode string, discountAmount decimal.Decimal) error
+	RemoveCoupon(cart *models.Cart) error
 	GetCart(cartID uuid.UUID) (*models.Cart, error)
 	MergeCarts(userID uuid.UUID, sessionID string) error
 	CleanupExpiredCarts() error
@@ -55,6 +55,7 @@ func (s *cartService) GetOrCreateCart(userID *uuid.UUID, sessionID *string) (*mo
 			SessionID: sessionID,
 			ExpiresAt: time.Now().Add(30 * 24 * time.Hour), // 30 days
 		}
+		cart.ID = uuid.New() // Ensure ID is set
 		err = s.repo.Create(cart)
 		if err != nil {
 			return nil, err
@@ -64,12 +65,7 @@ func (s *cartService) GetOrCreateCart(userID *uuid.UUID, sessionID *string) (*mo
 	return cart, nil
 }
 
-func (s *cartService) AddItem(cartID uuid.UUID, productID uuid.UUID, variantID *uuid.UUID, quantity int, unitPrice decimal.Decimal) error {
-	cart, err := s.repo.GetByID(cartID)
-	if err != nil {
-		return err
-	}
-
+func (s *cartService) AddItem(cart *models.Cart, productID uuid.UUID, variantID *uuid.UUID, quantity int, unitPrice decimal.Decimal) error {
 	// Check if item already exists
 	var existingItem *models.CartItem
 	for i := range cart.Items {
@@ -87,7 +83,7 @@ func (s *cartService) AddItem(cartID uuid.UUID, productID uuid.UUID, variantID *
 		// Add new item
 		totalPrice := unitPrice.Mul(decimal.NewFromInt(int64(quantity)))
 		item := models.CartItem{
-			CartID:     cartID,
+			CartID:     cart.ID,
 			ProductID:  productID,
 			VariantID:  variantID,
 			Quantity:   quantity,
@@ -100,12 +96,7 @@ func (s *cartService) AddItem(cartID uuid.UUID, productID uuid.UUID, variantID *
 	return s.repo.Update(cart)
 }
 
-func (s *cartService) UpdateItemQuantity(cartID uuid.UUID, itemID uuid.UUID, quantity int) error {
-	cart, err := s.repo.GetByID(cartID)
-	if err != nil {
-		return err
-	}
-
+func (s *cartService) UpdateItemQuantity(cart *models.Cart, itemID uuid.UUID, quantity int) error {
 	for i := range cart.Items {
 		if cart.Items[i].ID == itemID {
 			if quantity <= 0 {
@@ -122,12 +113,7 @@ func (s *cartService) UpdateItemQuantity(cartID uuid.UUID, itemID uuid.UUID, qua
 	return s.repo.Update(cart)
 }
 
-func (s *cartService) RemoveItem(cartID uuid.UUID, itemID uuid.UUID) error {
-	cart, err := s.repo.GetByID(cartID)
-	if err != nil {
-		return err
-	}
-
+func (s *cartService) RemoveItem(cart *models.Cart, itemID uuid.UUID) error {
 	for i := range cart.Items {
 		if cart.Items[i].ID == itemID {
 			cart.Items = append(cart.Items[:i], cart.Items[i+1:]...)
@@ -138,33 +124,18 @@ func (s *cartService) RemoveItem(cartID uuid.UUID, itemID uuid.UUID) error {
 	return s.repo.Update(cart)
 }
 
-func (s *cartService) ClearCart(cartID uuid.UUID) error {
-	cart, err := s.repo.GetByID(cartID)
-	if err != nil {
-		return err
-	}
-
+func (s *cartService) ClearCart(cart *models.Cart) error {
 	cart.Items = []models.CartItem{}
 	return s.repo.Update(cart)
 }
 
-func (s *cartService) ApplyCoupon(cartID uuid.UUID, couponCode string, discountAmount decimal.Decimal) error {
-	cart, err := s.repo.GetByID(cartID)
-	if err != nil {
-		return err
-	}
-
+func (s *cartService) ApplyCoupon(cart *models.Cart, couponCode string, discountAmount decimal.Decimal) error {
 	cart.CouponCode = &couponCode
 	cart.DiscountAmount = discountAmount
 	return s.repo.Update(cart)
 }
 
-func (s *cartService) RemoveCoupon(cartID uuid.UUID) error {
-	cart, err := s.repo.GetByID(cartID)
-	if err != nil {
-		return err
-	}
-
+func (s *cartService) RemoveCoupon(cart *models.Cart) error {
 	cart.CouponCode = nil
 	cart.DiscountAmount = decimal.Zero
 	return s.repo.Update(cart)

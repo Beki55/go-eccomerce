@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingBag, Trash2, Plus, Minus, ArrowRight, Tag, X } from 'lucide-react';
 import { useCart } from '@/lib/cart-context';
+import { useQuery } from '@tanstack/react-query';
+import { fetchProduct } from '@/lib/api';
 import GoldBackground from '@/components/ui/GoldBackground';
 
 const VALID_COUPONS: Record<string, number> = {
@@ -15,7 +17,7 @@ const VALID_COUPONS: Record<string, number> = {
 };
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, subtotal } = useCart();
+  const { items, removeItem, updateQuantity, subtotal, isLoading, error } = useCart();
   const [coupon, setCoupon] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState('');
   const [couponError, setCouponError] = useState('');
@@ -37,6 +39,35 @@ export default function CartPage() {
       setCouponSuccess('');
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="relative min-h-screen pt-20">
+        <GoldBackground />
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-20 text-center">
+          <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: 'rgba(212,175,55,0.1)', border: '2px solid rgba(212,175,55,0.3)' }}>
+            <ShoppingBag size={36} style={{ color: '#D4AF37' }} />
+          </div>
+          <p className="text-muted-foreground">Loading your cart...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="relative min-h-screen pt-20">
+        <GoldBackground />
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-20 text-center">
+          <div className="w-24 h-24 rounded-full mx-auto mb-6 flex items-center justify-center" style={{ background: 'rgba(212,175,55,0.1)', border: '2px solid rgba(212,175,55,0.3)' }}>
+            <ShoppingBag size={36} style={{ color: '#D4AF37' }} />
+          </div>
+          <h1 className="font-serif text-4xl font-light mb-4">Error Loading Cart</h1>
+          <p className="text-muted-foreground text-sm mb-8">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -84,7 +115,7 @@ export default function CartPage() {
             <AnimatePresence>
               {items.map(item => (
                 <motion.div
-                  key={item.product.id}
+                  key={item.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -100, height: 0 }}
@@ -96,10 +127,10 @@ export default function CartPage() {
                   }}
                 >
                   <div className="flex gap-4 p-4">
-                    <Link href={`/products/${item.product.id}`} className="relative w-24 h-32 rounded-lg overflow-hidden flex-shrink-0" style={{ border: '1px solid rgba(212,175,55,0.15)' }}>
+                    <Link href={`/products/${item.product_id}`} className="relative w-24 h-32 rounded-lg overflow-hidden flex-shrink-0" style={{ border: '1px solid rgba(212,175,55,0.15)' }}>
                       <Image
-                        src={item.product.images[0]}
-                        alt={item.product.name}
+                        src={item.product?.images?.[0] || '/placeholder.jpg'}
+                        alt={item.product?.name || 'Product'}
                         fill
                         className="object-cover transition-transform duration-500 hover:scale-110"
                       />
@@ -109,19 +140,16 @@ export default function CartPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="text-xs font-sans tracking-widest uppercase text-muted-foreground mb-1">
-                            {item.product.category}
+                            {item.product?.category?.name || 'General'}
                           </p>
-                          <Link href={`/products/${item.product.id}`}>
+                          <Link href={`/products/${item.product_id}`}>
                             <h3 className="font-serif text-lg font-medium text-foreground hover:text-[#D4AF37] transition-colors">
-                              {item.product.name}
+                              {item.product?.name || 'Product'}
                             </h3>
                           </Link>
-                          {item.size && (
-                            <p className="text-xs text-muted-foreground mt-1">Size: {item.size}</p>
-                          )}
                         </div>
                         <button
-                          onClick={() => removeItem(item.product.id)}
+                          onClick={() => removeItem(item.id)}
                           className="p-1.5 rounded transition-colors hover:text-red-400 text-muted-foreground flex-shrink-0"
                         >
                           <Trash2 size={14} />
@@ -131,7 +159,7 @@ export default function CartPage() {
                       <div className="flex items-center justify-between mt-4">
                         <div className="flex items-center gap-0 rounded" style={{ border: '1px solid rgba(212,175,55,0.3)' }}>
                           <button
-                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-[#D4AF37] transition-colors"
                           >
                             <Minus size={12} />
@@ -140,7 +168,7 @@ export default function CartPage() {
                             {item.quantity}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             className="w-8 h-8 flex items-center justify-center text-muted-foreground hover:text-[#D4AF37] transition-colors"
                           >
                             <Plus size={12} />
@@ -149,11 +177,11 @@ export default function CartPage() {
 
                         <div className="text-right">
                           <p className="font-serif text-lg font-semibold gold-text">
-                            {(item.product.price * item.quantity).toLocaleString()} Birr
+                            {parseFloat(item.total_price).toLocaleString()} Birr
                           </p>
                           {item.quantity > 1 && (
                             <p className="text-xs text-muted-foreground">
-                              {item.product.price.toLocaleString()} Birr each
+                              {parseFloat(item.unit_price).toLocaleString()} Birr each
                             </p>
                           )}
                         </div>

@@ -50,6 +50,29 @@ export interface BackendCategory {
     children?: BackendCategory[];
 }
 
+export interface BackendCartItem {
+    id: string;
+    cart_id: string;
+    product_id: string;
+    variant_id?: string;
+    quantity: number;
+    unit_price: string;
+    total_price: string;
+    added_at: string;
+}
+
+export interface BackendCart {
+    id: string;
+    user_id?: string;
+    session_id?: string;
+    coupon_code?: string;
+    discount_amount: string;
+    expires_at: string;
+    created_at: string;
+    updated_at: string;
+    items: BackendCartItem[];
+}
+
 export interface ListProductsResponse {
     products: BackendProduct[];
     total: number;
@@ -170,6 +193,114 @@ export async function fetchProductBySlug(slug: string): Promise<BackendProduct> 
 /** List all categories */
 export async function fetchCategories(): Promise<BackendCategory[]> {
     return fetchJSON<BackendCategory[]>('/categories');
+}
+
+// ─── Cart API Functions ──────────────────────────────────────────────────────
+
+/** Get current cart (authenticated or session-based) */
+export async function fetchCart(sessionId?: string): Promise<BackendCart> {
+    const headers: Record<string, string> = {};
+    if (sessionId) {
+        headers['X-Session-ID'] = sessionId;
+    }
+    return fetchJSON<BackendCart>('/cart', { headers });
+}
+
+/** Add item to cart */
+export async function addCartItem(
+    productId: string,
+    variantId: string | undefined,
+    quantity: number,
+    unitPrice: string,
+    sessionId?: string
+): Promise<{ message: string }> {
+    const headers: Record<string, string> = {};
+    if (sessionId) {
+        headers['X-Session-ID'] = sessionId;
+    }
+    return fetchJSON<{ message: string }>('/cart/items', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+            product_id: productId,
+            variant_id: variantId,
+            quantity,
+            unit_price: unitPrice,
+        }),
+    });
+}
+
+/** Update cart item quantity */
+export async function updateCartItem(
+    itemId: string,
+    quantity: number,
+    sessionId?: string
+): Promise<{ message: string }> {
+    const headers: Record<string, string> = {};
+    if (sessionId) {
+        headers['X-Session-ID'] = sessionId;
+    }
+    return fetchJSON<{ message: string }>(`/cart/items/${itemId}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({ quantity }),
+    });
+}
+
+/** Remove item from cart */
+export async function removeCartItem(itemId: string, sessionId?: string): Promise<{ message: string }> {
+    const headers: Record<string, string> = {};
+    if (sessionId) {
+        headers['X-Session-ID'] = sessionId;
+    }
+    return fetchJSON<{ message: string }>(`/cart/items/${itemId}`, {
+        method: 'DELETE',
+        headers,
+    });
+}
+
+/** Clear cart */
+export async function clearCart(sessionId?: string): Promise<{ message: string }> {
+    const headers: Record<string, string> = {};
+    if (sessionId) {
+        headers['X-Session-ID'] = sessionId;
+    }
+    return fetchJSON<{ message: string }>('/cart', {
+        method: 'DELETE',
+        headers,
+    });
+}
+
+/** Apply coupon to cart */
+export async function applyCoupon(
+    couponCode: string,
+    discountAmount: string,
+    sessionId?: string
+): Promise<{ message: string }> {
+    const headers: Record<string, string> = {};
+    if (sessionId) {
+        headers['X-Session-ID'] = sessionId;
+    }
+    return fetchJSON<{ message: string }>('/cart/coupon', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+            coupon_code: couponCode,
+            discount_amount: discountAmount,
+        }),
+    });
+}
+
+/** Remove coupon from cart */
+export async function removeCoupon(sessionId?: string): Promise<{ message: string }> {
+    const headers: Record<string, string> = {};
+    if (sessionId) {
+        headers['X-Session-ID'] = sessionId;
+    }
+    return fetchJSON<{ message: string }>('/cart/coupon', {
+        method: 'DELETE',
+        headers,
+    });
 }
 
 export const apiClient = {
