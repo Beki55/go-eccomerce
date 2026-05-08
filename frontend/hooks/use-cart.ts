@@ -12,14 +12,11 @@ import {
   fetchProduct,
   mapBackendProduct,
 } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { Product } from "@/lib/products";
 
 export interface CartItem extends BackendCartItem {
-  product?: {
-    id: string;
-    name: string;
-    price: number;
-    images: string[];
-  };
+  product?: Product;
 }
 
 export interface Cart extends Omit<BackendCart, "items"> {
@@ -30,38 +27,24 @@ export const cartQueryKeys = {
   cart: ["cart"] as const,
 };
 
-// Generate or get session ID for guest users
-function getSessionId(): string {
-  let sessionId = localStorage.getItem("cart-session-id");
-  if (!sessionId) {
-    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    localStorage.setItem("cart-session-id", sessionId);
-  }
-  return sessionId;
-}
-
 // Fetch current cart
 export function useCart() {
+  const { user, isLoading: isAuthLoading } = useAuth();
+
   return useQuery({
-    queryKey: cartQueryKeys.cart,
+    queryKey: [...cartQueryKeys.cart, user?.id ?? "guest"],
     queryFn: async (): Promise<Cart> => {
-      const sessionId = getSessionId();
-      const backendCart = await fetchCart(sessionId);
+      const backendCart = await fetchCart();
 
       // Fetch product details for each cart item
       const itemsWithProducts: CartItem[] = await Promise.all(
-        backendCart.items.map(async (item) => {
+        (backendCart.items || []).map(async (item) => {
           try {
             const product = await fetchProduct(item.product_id);
             const mappedProduct = mapBackendProduct(product);
             return {
               ...item,
-              product: {
-                id: mappedProduct.id,
-                name: mappedProduct.name,
-                price: mappedProduct.price,
-                images: mappedProduct.images,
-              },
+              product: mappedProduct,
             };
           } catch (error) {
             console.error(`Failed to fetch product ${item.product_id}:`, error);
@@ -75,6 +58,7 @@ export function useCart() {
         items: itemsWithProducts,
       };
     },
+    enabled: !isAuthLoading && !!user,
     staleTime: 30 * 1000, // 30 seconds
     retry: false,
   });
@@ -96,8 +80,7 @@ export function useAddToCart() {
       quantity: number;
       unitPrice: string;
     }) => {
-      const sessionId = getSessionId();
-      return addCartItem(productId, variantId, quantity, unitPrice, sessionId);
+      return addCartItem(productId, variantId, quantity, unitPrice);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartQueryKeys.cart });
@@ -117,8 +100,7 @@ export function useUpdateCartItem() {
       itemId: string;
       quantity: number;
     }) => {
-      const sessionId = getSessionId();
-      return updateCartItem(itemId, quantity, sessionId);
+      return updateCartItem(itemId, quantity);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartQueryKeys.cart });
@@ -132,8 +114,7 @@ export function useRemoveFromCart() {
 
   return useMutation({
     mutationFn: async (itemId: string) => {
-      const sessionId = getSessionId();
-      return removeCartItem(itemId, sessionId);
+      return removeCartItem(itemId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartQueryKeys.cart });
@@ -146,10 +127,7 @@ export function useClearCart() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      const sessionId = getSessionId();
-      return clearCart(sessionId);
-    },
+    mutationFn: async () => clearCart(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartQueryKeys.cart });
     },
@@ -168,8 +146,7 @@ export function useApplyCoupon() {
       couponCode: string;
       discountAmount: string;
     }) => {
-      const sessionId = getSessionId();
-      return applyCoupon(couponCode, discountAmount, sessionId);
+      return applyCoupon(couponCode, discountAmount);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartQueryKeys.cart });
@@ -182,10 +159,7 @@ export function useRemoveCoupon() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      const sessionId = getSessionId();
-      return removeCoupon(sessionId);
-    },
+    mutationFn: async () => removeCoupon(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: cartQueryKeys.cart });
     },

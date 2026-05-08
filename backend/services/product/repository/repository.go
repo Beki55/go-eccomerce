@@ -48,6 +48,13 @@ type ProductRepository interface {
 	UpdateStock(ctx context.Context, productID uuid.UUID, quantity int, reason string, referenceID *string, createdBy *uuid.UUID) error
 	GetLowStockProducts(ctx context.Context) ([]*models.Product, error)
 
+	// Likes
+	LikeProduct(ctx context.Context, userID, productID uuid.UUID) error
+	UnlikeProduct(ctx context.Context, userID, productID uuid.UUID) error
+	IsProductLiked(ctx context.Context, userID, productID uuid.UUID) (bool, error)
+	GetUserLikes(ctx context.Context, userID uuid.UUID) ([]*models.ProductLike, error)
+	GetProductLikesCount(ctx context.Context, productID uuid.UUID) (int64, error)
+
 	// Utility methods
 	GenerateSKU(ctx context.Context, categorySlug string) (string, error)
 }
@@ -344,4 +351,35 @@ func (r *productRepository) GenerateSKU(ctx context.Context, categorySlug string
 	}
 
 	return fmt.Sprintf("%s-%04d", prefix, counter), nil
+}
+
+// Like methods implementation
+func (r *productRepository) LikeProduct(ctx context.Context, userID, productID uuid.UUID) error {
+	like := &models.ProductLike{
+		UserID:    userID,
+		ProductID: productID,
+	}
+	return r.db.WithContext(ctx).Create(like).Error
+}
+
+func (r *productRepository) UnlikeProduct(ctx context.Context, userID, productID uuid.UUID) error {
+	return r.db.WithContext(ctx).Where("user_id = ? AND product_id = ?", userID, productID).Delete(&models.ProductLike{}).Error
+}
+
+func (r *productRepository) IsProductLiked(ctx context.Context, userID, productID uuid.UUID) (bool, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&models.ProductLike{}).Where("user_id = ? AND product_id = ?", userID, productID).Count(&count).Error
+	return count > 0, err
+}
+
+func (r *productRepository) GetUserLikes(ctx context.Context, userID uuid.UUID) ([]*models.ProductLike, error) {
+	var likes []*models.ProductLike
+	err := r.db.WithContext(ctx).Where("user_id = ?", userID).Preload("Product").Find(&likes).Error
+	return likes, err
+}
+
+func (r *productRepository) GetProductLikesCount(ctx context.Context, productID uuid.UUID) (int64, error) {
+	var count int64
+	err := r.db.WithContext(ctx).Model(&models.ProductLike{}).Where("product_id = ?", productID).Count(&count).Error
+	return count, err
 }

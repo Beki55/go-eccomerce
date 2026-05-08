@@ -39,19 +39,19 @@ func main() {
 	cartService := service.NewCartService(cartRepo)
 	cartHandler := handler.NewCartHandler(cartService)
 
-	// Authentication middleware (optional for session-based carts)
+	// Authentication middleware (cart is user-based only)
 	authMiddleware := func(c *gin.Context) {
 		token, err := c.Cookie("access_token")
 		if err != nil {
-			// No token, allow session-based access
-			c.Next()
+			c.JSON(401, gin.H{"error": "please login first"})
+			c.Abort()
 			return
 		}
 
 		claims, err := utils.ValidateToken(token, cfg.JWTSecret)
 		if err != nil {
-			// Invalid token, allow session-based access
-			c.Next()
+			c.JSON(401, gin.H{"error": "please login first"})
+			c.Abort()
 			return
 		}
 

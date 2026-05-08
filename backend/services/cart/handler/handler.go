@@ -19,35 +19,32 @@ func NewCartHandler(cartService service.CartService) *CartHandler {
 	return &CartHandler{cartService: cartService}
 }
 
-// GetCart retrieves the current user's cart or session cart
-func (h *CartHandler) GetCart(c *gin.Context) {
+func (h *CartHandler) getAuthenticatedUserCart(c *gin.Context) (*models.Cart, bool) {
 	userIDInterface, exists := c.Get("user_id")
-	sessionID := c.GetHeader("X-Session-ID")
-
-	var cartID uuid.UUID
-	if exists {
-		userID := userIDInterface.(uuid.UUID)
-		cart, err := h.cartService.GetOrCreateCart(&userID, nil)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		cartID = cart.ID
-	} else if sessionID != "" {
-		cart, err := h.cartService.GetOrCreateCart(nil, &sessionID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-		cartID = cart.ID
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user authentication or session ID required"})
-		return
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "please login first"})
+		return nil, false
 	}
 
-	cart, err := h.cartService.GetCart(cartID)
+	userID, ok := userIDInterface.(uuid.UUID)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "please login first"})
+		return nil, false
+	}
+
+	cart, err := h.cartService.GetOrCreateCart(&userID, nil)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return nil, false
+	}
+
+	return cart, true
+}
+
+// GetCart retrieves the current logged in user's cart
+func (h *CartHandler) GetCart(c *gin.Context) {
+	cart, ok := h.getAuthenticatedUserCart(c)
+	if !ok {
 		return
 	}
 
@@ -56,30 +53,16 @@ func (h *CartHandler) GetCart(c *gin.Context) {
 
 // AddItem adds an item to the cart
 func (h *CartHandler) AddItem(c *gin.Context) {
-	userIDInterface, exists := c.Get("user_id")
-	sessionID := c.GetHeader("X-Session-ID")
-
-	var cart *models.Cart
-	var err error
-	if exists {
-		userID := userIDInterface.(uuid.UUID)
-		cart, err = h.cartService.GetOrCreateCart(&userID, nil)
-	} else if sessionID != "" {
-		cart, err = h.cartService.GetOrCreateCart(nil, &sessionID)
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user authentication or session ID required"})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	cart, ok := h.getAuthenticatedUserCart(c)
+	if !ok {
 		return
 	}
 
 	var req struct {
-		ProductID  string `json:"product_id" binding:"required"`
-		VariantID  *string `json:"variant_id"`
-		Quantity   int     `json:"quantity" binding:"required,min=1"`
-		UnitPrice  string  `json:"unit_price" binding:"required"`
+		ProductID string  `json:"product_id" binding:"required"`
+		VariantID *string `json:"variant_id"`
+		Quantity  int     `json:"quantity" binding:"required,min=1"`
+		UnitPrice string  `json:"unit_price" binding:"required"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -121,22 +104,8 @@ func (h *CartHandler) AddItem(c *gin.Context) {
 
 // UpdateItem updates the quantity of an item in the cart
 func (h *CartHandler) UpdateItem(c *gin.Context) {
-	userIDInterface, exists := c.Get("user_id")
-	sessionID := c.GetHeader("X-Session-ID")
-
-	var cart *models.Cart
-	var err error
-	if exists {
-		userID := userIDInterface.(uuid.UUID)
-		cart, err = h.cartService.GetOrCreateCart(&userID, nil)
-	} else if sessionID != "" {
-		cart, err = h.cartService.GetOrCreateCart(nil, &sessionID)
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user authentication or session ID required"})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	cart, ok := h.getAuthenticatedUserCart(c)
+	if !ok {
 		return
 	}
 
@@ -158,6 +127,10 @@ func (h *CartHandler) UpdateItem(c *gin.Context) {
 
 	err = h.cartService.UpdateItemQuantity(cart, itemID, req.Quantity)
 	if err != nil {
+		if err.Error() == "item not found in cart" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -167,22 +140,8 @@ func (h *CartHandler) UpdateItem(c *gin.Context) {
 
 // RemoveItem removes an item from the cart
 func (h *CartHandler) RemoveItem(c *gin.Context) {
-	userIDInterface, exists := c.Get("user_id")
-	sessionID := c.GetHeader("X-Session-ID")
-
-	var cart *models.Cart
-	var err error
-	if exists {
-		userID := userIDInterface.(uuid.UUID)
-		cart, err = h.cartService.GetOrCreateCart(&userID, nil)
-	} else if sessionID != "" {
-		cart, err = h.cartService.GetOrCreateCart(nil, &sessionID)
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user authentication or session ID required"})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	cart, ok := h.getAuthenticatedUserCart(c)
+	if !ok {
 		return
 	}
 
@@ -195,6 +154,10 @@ func (h *CartHandler) RemoveItem(c *gin.Context) {
 
 	err = h.cartService.RemoveItem(cart, itemID)
 	if err != nil {
+		if err.Error() == "item not found in cart" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -204,26 +167,12 @@ func (h *CartHandler) RemoveItem(c *gin.Context) {
 
 // ClearCart clears all items from the cart
 func (h *CartHandler) ClearCart(c *gin.Context) {
-	userIDInterface, exists := c.Get("user_id")
-	sessionID := c.GetHeader("X-Session-ID")
-
-	var cart *models.Cart
-	var err error
-	if exists {
-		userID := userIDInterface.(uuid.UUID)
-		cart, err = h.cartService.GetOrCreateCart(&userID, nil)
-	} else if sessionID != "" {
-		cart, err = h.cartService.GetOrCreateCart(nil, &sessionID)
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user authentication or session ID required"})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	cart, ok := h.getAuthenticatedUserCart(c)
+	if !ok {
 		return
 	}
 
-	err = h.cartService.ClearCart(cart)
+	err := h.cartService.ClearCart(cart)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -234,22 +183,8 @@ func (h *CartHandler) ClearCart(c *gin.Context) {
 
 // ApplyCoupon applies a coupon to the cart
 func (h *CartHandler) ApplyCoupon(c *gin.Context) {
-	userIDInterface, exists := c.Get("user_id")
-	sessionID := c.GetHeader("X-Session-ID")
-
-	var cart *models.Cart
-	var err error
-	if exists {
-		userID := userIDInterface.(uuid.UUID)
-		cart, err = h.cartService.GetOrCreateCart(&userID, nil)
-	} else if sessionID != "" {
-		cart, err = h.cartService.GetOrCreateCart(nil, &sessionID)
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user authentication or session ID required"})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	cart, ok := h.getAuthenticatedUserCart(c)
+	if !ok {
 		return
 	}
 
@@ -280,26 +215,12 @@ func (h *CartHandler) ApplyCoupon(c *gin.Context) {
 
 // RemoveCoupon removes the coupon from the cart
 func (h *CartHandler) RemoveCoupon(c *gin.Context) {
-	userIDInterface, exists := c.Get("user_id")
-	sessionID := c.GetHeader("X-Session-ID")
-
-	var cart *models.Cart
-	var err error
-	if exists {
-		userID := userIDInterface.(uuid.UUID)
-		cart, err = h.cartService.GetOrCreateCart(&userID, nil)
-	} else if sessionID != "" {
-		cart, err = h.cartService.GetOrCreateCart(nil, &sessionID)
-	} else {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "user authentication or session ID required"})
-		return
-	}
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	cart, ok := h.getAuthenticatedUserCart(c)
+	if !ok {
 		return
 	}
 
-	err = h.cartService.RemoveCoupon(cart)
+	err := h.cartService.RemoveCoupon(cart)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

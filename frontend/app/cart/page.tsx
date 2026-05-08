@@ -36,6 +36,7 @@ export default function CartPage() {
   const shipping = subtotal > 500 ? 0 : 35;
   const tax = (subtotal - discount) * 0.08;
   const total = subtotal - discount + shipping + tax;
+  const needsLogin = error?.message?.toLowerCase().includes("please login first");
 
   const handleApplyCoupon = () => {
     const upper = coupon.trim().toUpperCase();
@@ -86,9 +87,22 @@ export default function CartPage() {
             <ShoppingBag size={36} style={{ color: "#D4AF37" }} />
           </div>
           <h1 className="font-serif text-4xl font-light mb-4">
-            Error Loading Cart
+            {needsLogin ? "Please Login First" : "Error Loading Cart"}
           </h1>
-          <p className="text-muted-foreground text-sm mb-8">{error.message}</p>
+          <p className="text-muted-foreground text-sm mb-8">
+            {needsLogin
+              ? "Sign in to view and manage your cart."
+              : error.message}
+          </p>
+          {needsLogin && (
+            <Link
+              href="/auth"
+              className="gold-btn rounded inline-flex items-center gap-2"
+            >
+              Go to Login
+              <ArrowRight size={14} />
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -186,7 +200,7 @@ export default function CartPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <p className="text-xs font-sans tracking-widest uppercase text-muted-foreground mb-1">
-                            {item.product?.category?.name || "General"}
+                            {item.product?.category || "General"}
                           </p>
                           <Link href={`/products/${item.product_id}`}>
                             <h3 className="font-serif text-lg font-medium text-foreground hover:text-[#D4AF37] transition-colors">

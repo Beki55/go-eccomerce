@@ -23,6 +23,7 @@ import ProductCard from "@/components/ui/ProductCard";
 import StarRating from "@/components/ui/StarRating";
 import { useCart } from "@/lib/cart-context";
 import { useProductDetail, useRelatedProducts } from "@/hooks/useProducts";
+import { useIsProductLiked, useProductLikesCount, useLikeProduct, useUnlikeProduct } from "@/hooks/use-likes";
 
 const SIZES = ["XS", "S", "M", "L", "XL"];
 
@@ -34,10 +35,14 @@ export default function ProductDetailPage() {
 
   const { addItem, isInCart } = useCart();
 
+  const { data: isLiked, isLoading: isLikedLoading } = useIsProductLiked(id);
+  const { data: likesCount, isLoading: likesCountLoading } = useProductLikesCount(id);
+  const likeMutation = useLikeProduct();
+  const unlikeMutation = useUnlikeProduct();
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("M");
-  const [wishlisted, setWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [activeTab, setActiveTab] = useState("description");
 
@@ -57,6 +62,15 @@ export default function ProductDetailPage() {
     addItem(product, quantity);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2500);
+  };
+
+  const handleLikeToggle = () => {
+    if (!id) return;
+    if (isLiked) {
+      unlikeMutation.mutate(id);
+    } else {
+      likeMutation.mutate(id);
+    }
   };
 
   const tabs = [
@@ -122,15 +136,16 @@ export default function ProductDetailPage() {
                 </div>
               )}
               <button
-                onClick={() => setWishlisted(!wishlisted)}
-                className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300"
+                onClick={handleLikeToggle}
+                disabled={likeMutation.isPending || unlikeMutation.isPending}
+                className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-50"
                 style={{
                   background: "rgba(0,0,0,0.6)",
-                  border: `1px solid ${wishlisted ? "#FFD700" : "rgba(212,175,55,0.5)"}`,
-                  color: wishlisted ? "#FFD700" : "#D4AF37",
+                  border: `1px solid ${isLiked ? "#FFD700" : "rgba(212,175,55,0.5)"}`,
+                  color: isLiked ? "#FFD700" : "#D4AF37",
                 }}
               >
-                <Heart size={16} fill={wishlisted ? "#FFD700" : "none"} />
+                <Heart size={16} fill={isLiked ? "#FFD700" : "none"} />
               </button>
             </motion.div>
 
@@ -186,6 +201,14 @@ export default function ProductDetailPage() {
               <span className="text-xs text-muted-foreground">
                 {product.reviewCount} verified reviews
               </span>
+              {!likesCountLoading && likesCount !== undefined && (
+                <div className="flex items-center gap-1">
+                  <Heart size={14} style={{ color: "#D4AF37" }} fill="#FFD700" />
+                  <span className="text-xs text-muted-foreground">
+                    {likesCount} {likesCount === 1 ? 'like' : 'likes'}
+                  </span>
+                </div>
+              )}
             </div>
 
             <div className="flex items-baseline gap-3 mb-8">
@@ -311,14 +334,15 @@ export default function ProductDetailPage() {
               </motion.button>
 
               <button
-                onClick={() => setWishlisted(!wishlisted)}
-                className="w-14 h-14 rounded-lg border flex items-center justify-center transition-all duration-300 hover:border-[#D4AF37] hover:text-[#D4AF37]"
+                onClick={handleLikeToggle}
+                disabled={likeMutation.isPending || unlikeMutation.isPending}
+                className="w-14 h-14 rounded-lg border flex items-center justify-center transition-all duration-300 hover:border-[#D4AF37] hover:text-[#D4AF37] disabled:opacity-50"
                 style={{
-                  borderColor: wishlisted ? "#FFD700" : "rgba(212,175,55,0.3)",
-                  color: wishlisted ? "#FFD700" : "hsl(var(--foreground))",
+                  borderColor: isLiked ? "#FFD700" : "rgba(212,175,55,0.3)",
+                  color: isLiked ? "#FFD700" : "hsl(var(--foreground))",
                 }}
               >
-                <Heart size={18} fill={wishlisted ? "#FFD700" : "none"} />
+                <Heart size={18} fill={isLiked ? "#FFD700" : "none"} />
               </button>
 
               <button

@@ -73,6 +73,27 @@ func main() {
 		c.Next()
 	}
 
+	// User authentication middleware (for likes, requires login but not admin)
+	userAuthMiddleware := func(c *gin.Context) {
+		token, err := c.Cookie("access_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "authentication required"})
+			c.Abort()
+			return
+		}
+
+		claims, err := utils.ValidateToken(token, cfg.JWTSecret)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("user_id", claims.UserID)
+		c.Set("user_role", claims.Role)
+		c.Next()
+	}
+
 	// Setup Gin router
 	r := gin.Default()
 
@@ -105,6 +126,20 @@ func main() {
 		{
 			brands.GET("", productHandler.ListBrands)
 			brands.GET("/:id", productHandler.GetBrand)
+		}
+
+		// User authenticated routes (for likes)
+		user := api.Group("")
+		user.Use(userAuthMiddleware)
+		{
+			userProducts := user.Group("/products")
+			{
+				userProducts.POST("/:id/like", productHandler.LikeProduct)
+				userProducts.DELETE("/:id/like", productHandler.UnlikeProduct)
+				userProducts.GET("/:id/like", productHandler.IsProductLiked)
+				userProducts.GET("/:id/likes/count", productHandler.GetProductLikesCount)
+				userProducts.GET("/likes", productHandler.GetUserLikes)
+			}
 		}
 
 		// Admin-only routes (require authentication)

@@ -150,13 +150,27 @@ export function mapBackendProduct(p: BackendProduct) {
 // ─── API Functions ────────────────────────────────────────────────────────────
 
 async function fetchJSON<T>(path: string, options?: RequestInit): Promise<T> {
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(options?.headers || {}),
+    };
+
     const res = await fetch(`${API_URL}${path}`, {
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         credentials: 'include',
         ...options,
     });
     if (!res.ok) {
-        throw new Error(`API error ${res.status}: ${res.statusText}`);
+        let message = `API error ${res.status}: ${res.statusText}`;
+        try {
+            const body = await res.json();
+            if (body?.error) {
+                message = body.error;
+            }
+        } catch {
+            // Keep default message when response is not JSON
+        }
+        throw new Error(message);
     }
     return res.json() as Promise<T>;
 }
@@ -197,13 +211,9 @@ export async function fetchCategories(): Promise<BackendCategory[]> {
 
 // ─── Cart API Functions ──────────────────────────────────────────────────────
 
-/** Get current cart (authenticated or session-based) */
-export async function fetchCart(sessionId?: string): Promise<BackendCart> {
-    const headers: Record<string, string> = {};
-    if (sessionId) {
-        headers['X-Session-ID'] = sessionId;
-    }
-    return fetchJSON<BackendCart>('/cart', { headers });
+/** Get current logged in user's cart */
+export async function fetchCart(): Promise<BackendCart> {
+    return fetchJSON<BackendCart>('/cart');
 }
 
 /** Add item to cart */
@@ -211,16 +221,10 @@ export async function addCartItem(
     productId: string,
     variantId: string | undefined,
     quantity: number,
-    unitPrice: string,
-    sessionId?: string
+    unitPrice: string
 ): Promise<{ message: string }> {
-    const headers: Record<string, string> = {};
-    if (sessionId) {
-        headers['X-Session-ID'] = sessionId;
-    }
     return fetchJSON<{ message: string }>('/cart/items', {
         method: 'POST',
-        headers,
         body: JSON.stringify({
             product_id: productId,
             variant_id: variantId,
@@ -233,57 +237,35 @@ export async function addCartItem(
 /** Update cart item quantity */
 export async function updateCartItem(
     itemId: string,
-    quantity: number,
-    sessionId?: string
+    quantity: number
 ): Promise<{ message: string }> {
-    const headers: Record<string, string> = {};
-    if (sessionId) {
-        headers['X-Session-ID'] = sessionId;
-    }
     return fetchJSON<{ message: string }>(`/cart/items/${itemId}`, {
         method: 'PUT',
-        headers,
         body: JSON.stringify({ quantity }),
     });
 }
 
 /** Remove item from cart */
-export async function removeCartItem(itemId: string, sessionId?: string): Promise<{ message: string }> {
-    const headers: Record<string, string> = {};
-    if (sessionId) {
-        headers['X-Session-ID'] = sessionId;
-    }
+export async function removeCartItem(itemId: string): Promise<{ message: string }> {
     return fetchJSON<{ message: string }>(`/cart/items/${itemId}`, {
         method: 'DELETE',
-        headers,
     });
 }
 
 /** Clear cart */
-export async function clearCart(sessionId?: string): Promise<{ message: string }> {
-    const headers: Record<string, string> = {};
-    if (sessionId) {
-        headers['X-Session-ID'] = sessionId;
-    }
+export async function clearCart(): Promise<{ message: string }> {
     return fetchJSON<{ message: string }>('/cart', {
         method: 'DELETE',
-        headers,
     });
 }
 
 /** Apply coupon to cart */
 export async function applyCoupon(
     couponCode: string,
-    discountAmount: string,
-    sessionId?: string
+    discountAmount: string
 ): Promise<{ message: string }> {
-    const headers: Record<string, string> = {};
-    if (sessionId) {
-        headers['X-Session-ID'] = sessionId;
-    }
     return fetchJSON<{ message: string }>('/cart/coupon', {
         method: 'POST',
-        headers,
         body: JSON.stringify({
             coupon_code: couponCode,
             discount_amount: discountAmount,
@@ -292,15 +274,41 @@ export async function applyCoupon(
 }
 
 /** Remove coupon from cart */
-export async function removeCoupon(sessionId?: string): Promise<{ message: string }> {
-    const headers: Record<string, string> = {};
-    if (sessionId) {
-        headers['X-Session-ID'] = sessionId;
-    }
+export async function removeCoupon(): Promise<{ message: string }> {
     return fetchJSON<{ message: string }>('/cart/coupon', {
         method: 'DELETE',
-        headers,
     });
+}
+
+// ─── Like API Functions ──────────────────────────────────────────────────────
+
+/** Like a product */
+export async function likeProduct(productId: string): Promise<{ message: string }> {
+    return fetchJSON<{ message: string }>(`/products/${productId}/like`, {
+        method: 'POST',
+    });
+}
+
+/** Unlike a product */
+export async function unlikeProduct(productId: string): Promise<{ message: string }> {
+    return fetchJSON<{ message: string }>(`/products/${productId}/like`, {
+        method: 'DELETE',
+    });
+}
+
+/** Check if product is liked by current user */
+export async function isProductLiked(productId: string): Promise<{ liked: boolean }> {
+    return fetchJSON<{ liked: boolean }>(`/products/${productId}/like`);
+}
+
+/** Get product likes count */
+export async function getProductLikesCount(productId: string): Promise<{ count: number }> {
+    return fetchJSON<{ count: number }>(`/products/${productId}/likes/count`);
+}
+
+/** Get user's liked products */
+export async function getUserLikes(): Promise<BackendProduct[]> {
+    return fetchJSON<BackendProduct[]>('/products/likes');
 }
 
 export const apiClient = {

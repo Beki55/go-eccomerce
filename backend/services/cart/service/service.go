@@ -28,6 +28,16 @@ type cartService struct {
 	repo repository.CartRepository
 }
 
+func variantIDsEqual(a, b *uuid.UUID) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
+}
+
 func NewCartService(repo repository.CartRepository) CartService {
 	return &cartService{repo: repo}
 }
@@ -69,7 +79,7 @@ func (s *cartService) AddItem(cart *models.Cart, productID uuid.UUID, variantID 
 	// Check if item already exists
 	var existingItem *models.CartItem
 	for i := range cart.Items {
-		if cart.Items[i].ProductID == productID && cart.Items[i].VariantID == variantID {
+		if cart.Items[i].ProductID == productID && variantIDsEqual(cart.Items[i].VariantID, variantID) {
 			existingItem = &cart.Items[i]
 			break
 		}
@@ -97,8 +107,10 @@ func (s *cartService) AddItem(cart *models.Cart, productID uuid.UUID, variantID 
 }
 
 func (s *cartService) UpdateItemQuantity(cart *models.Cart, itemID uuid.UUID, quantity int) error {
+	itemFound := false
 	for i := range cart.Items {
 		if cart.Items[i].ID == itemID {
+			itemFound = true
 			if quantity <= 0 {
 				// Remove item
 				cart.Items = append(cart.Items[:i], cart.Items[i+1:]...)
@@ -109,16 +121,24 @@ func (s *cartService) UpdateItemQuantity(cart *models.Cart, itemID uuid.UUID, qu
 			break
 		}
 	}
+	if !itemFound {
+		return errors.New("item not found in cart")
+	}
 
 	return s.repo.Update(cart)
 }
 
 func (s *cartService) RemoveItem(cart *models.Cart, itemID uuid.UUID) error {
+	itemFound := false
 	for i := range cart.Items {
 		if cart.Items[i].ID == itemID {
+			itemFound = true
 			cart.Items = append(cart.Items[:i], cart.Items[i+1:]...)
 			break
 		}
+	}
+	if !itemFound {
+		return errors.New("item not found in cart")
 	}
 
 	return s.repo.Update(cart)

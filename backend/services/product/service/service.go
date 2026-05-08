@@ -46,6 +46,13 @@ type ProductService interface {
 	UpdateStock(ctx context.Context, productID uuid.UUID, quantity int, reason string, referenceID *string, createdBy *uuid.UUID) error
 	GetLowStockProducts(ctx context.Context) ([]*models.Product, error)
 
+	// Likes
+	LikeProduct(ctx context.Context, userID, productID uuid.UUID) error
+	UnlikeProduct(ctx context.Context, userID, productID uuid.UUID) error
+	IsProductLiked(ctx context.Context, userID, productID uuid.UUID) (bool, error)
+	GetUserLikes(ctx context.Context, userID uuid.UUID) ([]*models.ProductLike, error)
+	GetProductLikesCount(ctx context.Context, productID uuid.UUID) (int64, error)
+
 	// Utility functions
 	GenerateSKU(ctx context.Context, categorySlug string) (string, error)
 	GenerateSlug(name string) string
@@ -503,4 +510,31 @@ func convertToInt(v interface{}) (int, bool) {
 		return i, err == nil
 	}
 	return 0, false
+}
+
+// Like methods implementation
+func (s *productService) LikeProduct(ctx context.Context, userID, productID uuid.UUID) error {
+	// Check if product exists
+	_, err := s.repo.GetByID(ctx, productID)
+	if err != nil {
+		return err
+	}
+
+	return s.repo.LikeProduct(ctx, userID, productID)
+}
+
+func (s *productService) UnlikeProduct(ctx context.Context, userID, productID uuid.UUID) error {
+	return s.repo.UnlikeProduct(ctx, userID, productID)
+}
+
+func (s *productService) IsProductLiked(ctx context.Context, userID, productID uuid.UUID) (bool, error) {
+	return s.repo.IsProductLiked(ctx, userID, productID)
+}
+
+func (s *productService) GetUserLikes(ctx context.Context, userID uuid.UUID) ([]*models.ProductLike, error) {
+	return s.repo.GetUserLikes(ctx, userID)
+}
+
+func (s *productService) GetProductLikesCount(ctx context.Context, productID uuid.UUID) (int64, error) {
+	return s.repo.GetProductLikesCount(ctx, productID)
 }

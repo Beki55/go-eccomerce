@@ -658,7 +658,7 @@ export default function CheckoutPage() {
                           {item.product?.name || "Product"}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {item.product?.category?.name || "General"}
+                          {item.product?.category || "General"}
                         </p>
                       </div>
                       <p
