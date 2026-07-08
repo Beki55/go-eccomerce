@@ -24,6 +24,8 @@ import StarRating from "@/components/ui/StarRating";
 import { useCart } from "@/lib/cart-context";
 import { useProductDetail, useRelatedProducts } from "@/hooks/useProducts";
 import { useIsProductLiked, useProductLikesCount, useLikeProduct, useUnlikeProduct } from "@/hooks/use-likes";
+import { useAuth } from "@/lib/auth-context";
+import { toast } from "sonner";
 
 const SIZES = ["XS", "S", "M", "L", "XL"];
 
@@ -39,6 +41,7 @@ export default function ProductDetailPage() {
   const { data: likesCount, isLoading: likesCountLoading } = useProductLikesCount(id);
   const likeMutation = useLikeProduct();
   const unlikeMutation = useUnlikeProduct();
+  const { user } = useAuth();
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -66,10 +69,16 @@ export default function ProductDetailPage() {
 
   const handleLikeToggle = () => {
     if (!id) return;
+    if (!user) {
+      toast.error('Please login to like products');
+      return;
+    }
     if (isLiked) {
       unlikeMutation.mutate(id);
+      toast.success('Removed from wishlist');
     } else {
       likeMutation.mutate(id);
+      toast.success('Added to wishlist ♥');
     }
   };
 
@@ -405,11 +414,10 @@ export default function ProductDetailPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 font-sans text-sm tracking-wider transition-all duration-300 relative ${
-                  activeTab === tab.id
+                className={`px-6 py-3 font-sans text-sm tracking-wider transition-all duration-300 relative ${activeTab === tab.id
                     ? "text-[#D4AF37]"
                     : "text-muted-foreground hover:text-[#D4AF37]"
-                }`}
+                  }`}
               >
                 {tab.label}
                 {activeTab === tab.id && (

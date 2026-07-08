@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { CartProvider } from "@/lib/cart-context";
+import { LikesProvider } from "@/lib/likes-context";
 import { AuthProvider } from "@/lib/auth-context";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -30,12 +31,14 @@ export default function RootLayout({
           <QueryProvider>
             <AuthProvider>
               <CartProvider>
-                <div className="min-h-screen flex flex-col">
-                  <Header />
-                  <main className="flex-1">{children}</main>
-                  <Footer />
-                </div>
-                <Toaster position="top-center" expand={false} richColors />
+                <LikesProvider>
+                  <div className="min-h-screen flex flex-col">
+                    <Header />
+                    <main className="flex-1">{children}</main>
+                    <Footer />
+                  </div>
+                  <Toaster position="top-center" expand={false} richColors />
+                </LikesProvider>
               </CartProvider>
             </AuthProvider>
           </QueryProvider>

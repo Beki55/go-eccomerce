@@ -3,11 +3,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingBag, Eye } from 'lucide-react';
 import { Product } from '@/lib/products';
 import { useCart } from '@/lib/cart-context';
+import { useLikes } from '@/lib/likes-context';
+import { useAuth } from '@/lib/auth-context';
 import StarRating from './StarRating';
+import { toast } from 'sonner';
 
 interface ProductCardProps {
   product: Product;
@@ -16,15 +20,35 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
   const { addItem, isInCart } = useCart();
-  const [wishlisted, setWishlisted] = useState(false);
+  const { isLiked, toggleLike } = useLikes();
+  const { user } = useAuth();
+  const router = useRouter();
   const [addedToCart, setAddedToCart] = useState(false);
   const [hovered, setHovered] = useState(false);
+
+  const wishlisted = isLiked(product.id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     addItem(product);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  const handleToggleLike = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      toast.error('Please login to add items to your wishlist');
+      router.push('/auth');
+      return;
+    }
+    toggleLike(product.id);
+    if (wishlisted) {
+      toast.success('Removed from wishlist');
+    } else {
+      toast.success('Added to wishlist ♥');
+    }
   };
 
   const discount = product.originalPrice
@@ -114,19 +138,18 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                     initial={{ scale: 0, y: 20 }}
                     animate={{ scale: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    onClick={e => {
-                      e.preventDefault();
-                      setWishlisted(!wishlisted);
-                    }}
+                    onClick={handleToggleLike}
                     className="w-11 h-11 rounded-full flex items-center justify-center transition-all duration-300"
                     style={{
-                      background: 'rgba(0,0,0,0.8)',
-                      border: `1px solid ${wishlisted ? '#FFD700' : '#D4AF37'}`,
-                      color: wishlisted ? '#FFD700' : '#D4AF37',
+                      background: wishlisted
+                        ? 'linear-gradient(135deg, rgba(255,0,80,0.9), rgba(220,30,70,0.9))'
+                        : 'rgba(0,0,0,0.8)',
+                      border: `1px solid ${wishlisted ? '#FF0050' : '#D4AF37'}`,
+                      color: wishlisted ? '#fff' : '#D4AF37',
                     }}
-                    title="Add to wishlist"
+                    title={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
                   >
-                    <Heart size={16} fill={wishlisted ? '#FFD700' : 'none'} />
+                    <Heart size={16} fill={wishlisted ? '#fff' : 'none'} />
                   </motion.button>
 
                   <motion.div
@@ -154,7 +177,7 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
           <div className="p-4">
             <div className="flex items-start justify-between gap-2 mb-2">
-              <div>
+              <div className="flex-1 min-w-0">
                 <p className="text-xs font-sans text-muted-foreground tracking-widest uppercase mb-1">
                   {product.category}
                 </p>
@@ -162,6 +185,19 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
                   {product.name}
                 </h3>
               </div>
+              {/* Small heart indicator */}
+              <button
+                onClick={handleToggleLike}
+                className="flex-shrink-0 p-1 rounded-full transition-all duration-300 mt-0.5"
+                title={wishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                <Heart
+                  size={14}
+                  className="transition-all duration-300"
+                  fill={wishlisted ? '#FF0050' : 'none'}
+                  style={{ color: wishlisted ? '#FF0050' : 'hsl(var(--muted-foreground))' }}
+                />
+              </button>
             </div>
 
             <div className="flex items-center gap-2 mb-3">

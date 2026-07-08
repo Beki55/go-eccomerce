@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useCart } from "@/lib/cart-context";
+import { useLikes } from "@/lib/likes-context";
 import { useAuth } from "@/lib/auth-context";
 import {
   ShoppingBag,
@@ -11,6 +12,7 @@ import {
   Moon,
   Search,
   User,
+  Heart,
   Menu,
   X,
   LogOut,
@@ -28,6 +30,7 @@ export default function Header() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const { totalItems } = useCart();
+  const { totalLikes } = useLikes();
   const { user, logout } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -46,9 +49,8 @@ export default function Header() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          scrolled ? "backdrop-blur-xl border-b" : "bg-transparent"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "backdrop-blur-xl border-b" : "bg-transparent"
+          }`}
         style={{
           backgroundColor: scrolled
             ? isDark
@@ -83,19 +85,17 @@ export default function Header() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`relative font-sans text-sm tracking-widest uppercase transition-colors duration-300 group ${
-                    pathname === link.href
+                  className={`relative font-sans text-sm tracking-widest uppercase transition-colors duration-300 group ${pathname === link.href
                       ? "text-[#D4AF37]"
                       : "text-foreground hover:text-[#D4AF37]"
-                  }`}
+                    }`}
                 >
                   {link.label}
                   <span
-                    className={`absolute -bottom-1 left-0 h-px transition-all duration-300 ${
-                      pathname === link.href
+                    className={`absolute -bottom-1 left-0 h-px transition-all duration-300 ${pathname === link.href
                         ? "w-full"
                         : "w-0 group-hover:w-full"
-                    }`}
+                      }`}
                     style={{
                       background: "linear-gradient(90deg, #FFD700, #D4AF37)",
                     }}
@@ -132,6 +132,26 @@ export default function Header() {
                 className="p-2 rounded-full transition-all duration-300 hover:bg-[rgba(212,175,55,0.1)] hidden sm:block"
               >
                 <User size={18} className="text-[#D4AF37]" />
+              </Link>
+
+              <Link
+                href="/wishlist"
+                className="relative p-2 rounded-full transition-all duration-300 hover:bg-[rgba(212,175,55,0.1)]"
+              >
+                <Heart size={18} className="text-[#D4AF37]" />
+                {totalLikes > 0 && (
+                  <motion.span
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+                    style={{
+                      background: "linear-gradient(135deg, #FF0050, #D4175B)",
+                      color: "#fff",
+                    }}
+                  >
+                    {totalLikes}
+                  </motion.span>
+                )}
               </Link>
 
               <Link
@@ -233,11 +253,10 @@ export default function Header() {
                   <Link
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className={`font-serif text-3xl font-light tracking-wider transition-colors ${
-                      pathname === link.href
+                    className={`font-serif text-3xl font-light tracking-wider transition-colors ${pathname === link.href
                         ? "gold-text"
                         : "text-foreground hover:text-[#D4AF37]"
-                    }`}
+                      }`}
                   >
                     {link.label}
                   </Link>
@@ -246,6 +265,14 @@ export default function Header() {
             </nav>
             <div className="gold-divider mt-8 mb-8" />
             <div className="flex items-center gap-4">
+              <Link
+                href="/wishlist"
+                onClick={() => setMobileOpen(false)}
+                className="gold-outline-btn rounded-full flex items-center gap-2"
+              >
+                <Heart size={16} />
+                Wishlist {totalLikes > 0 && `(${totalLikes})`}
+              </Link>
               <Link
                 href="/cart"
                 onClick={() => setMobileOpen(false)}
